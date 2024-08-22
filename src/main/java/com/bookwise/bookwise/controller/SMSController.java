@@ -18,19 +18,19 @@ import java.util.Map;
 @RequestMapping(path="/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 public class SMSController {
 
-    private String TWILIO_ACCOUNT_SID = "ACcb4bed65b875e2349ca56c7c67c99d4e";
-    private String TWILIO_AUTH_TOKEN = "93af76fe009c5d2385e655247e3a81b1";
-    private String TWILIO_PHONE_NUMBER = "+12562696971";
+    // private String TWILIO_ACCOUNT_SID = "ACcb4bed65b875e2349ca56c7c67c99d4e";
+    // private String TWILIO_AUTH_TOKEN = "93af76fe009c5d2385e655247e3a81b1";
+    // private String TWILIO_PHONE_NUMBER = "+12562696971";
 
-    private Map<String, String> otpMap = new HashMap<>();
+    // private Map<String, String> otpMap = new HashMap<>();
 
-    @GetMapping("/send-sms/{toMobileNo}/text")
-    public ResponseEntity sendMessage(@PathVariable("toMobileNo") String toMobileNo, @PathVariable("text") String text) {
-        Twilio.init(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+    // @GetMapping("/send-sms/{toMobileNo}/text")
+    // public ResponseEntity sendMessage(@PathVariable("toMobileNo") String toMobileNo, @PathVariable("text") String text) {
+    //     Twilio.init(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
-        Message.creator(new PhoneNumber(toMobileNo), new PhoneNumber(TWILIO_PHONE_NUMBER), text).create();
+    //     Message.creator(new PhoneNumber(toMobileNo), new PhoneNumber(TWILIO_PHONE_NUMBER), text).create();
 
-        return ResponseEntity.status(HttpStatus.OK).body("Message sent successfully to mobile no. " + toMobileNo);
-    }
+    //     return ResponseEntity.status(HttpStatus.OK).body("Message sent successfully to mobile no. " + toMobileNo);
+    // }
 
 }
