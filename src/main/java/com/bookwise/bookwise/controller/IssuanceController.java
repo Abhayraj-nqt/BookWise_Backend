@@ -1,10 +1,15 @@
 package com.bookwise.bookwise.controller;
 
+import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceInDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceOutDTO;
 import com.bookwise.bookwise.service.IIssuanceService;
 import com.fasterxml.jackson.core.JsonParser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +27,29 @@ import java.util.Map;
 public class IssuanceController {
 
     private final IIssuanceService iIssuanceService;
+
+    @GetMapping("/issuances")
+    public ResponseEntity<?> getBooks(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search) {
+        if (page == null || size == null) {
+            List<IssuanceOutDTO> issuanceOutDTOList = iIssuanceService.getAllIssuances(Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+            return ResponseEntity.ok(issuanceOutDTOList);
+        } else {
+            Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
+            Page<IssuanceOutDTO> issuanceOutDTOPage = iIssuanceService.getIssuances(pageable, search);
+            return ResponseEntity.status(HttpStatus.OK).body(issuanceOutDTOPage);
+        }
+    }
+
+    @GetMapping("/users/active-count")
+    public ResponseEntity<Long> getTotalActiveUsers() {
+        Long count = iIssuanceService.getTotalActiveUsers();
+        return ResponseEntity.status(HttpStatus.OK).body(count);
+    }
 
     @GetMapping("/issuance/{id}")
     public ResponseEntity<IssuanceOutDTO> getIssuanceById(@PathVariable Long id) {

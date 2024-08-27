@@ -27,7 +27,7 @@ public class Issuance {
     @Column(name = "return_time")
     private LocalDateTime returnTime;
 
-    private String status;
+    private String status = "";
 
     @Column(name = "issuance_type")
     private String issuanceType;
@@ -35,6 +35,7 @@ public class Issuance {
     @PrePersist
     protected void onCreate() {
         this.issueTime = LocalDateTime.now();
+        this.status = "ISSUED";
     }
 
 }

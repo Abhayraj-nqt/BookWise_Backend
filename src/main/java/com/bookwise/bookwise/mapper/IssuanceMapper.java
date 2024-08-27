@@ -37,7 +37,9 @@ public final class IssuanceMapper {
 
         issuance.setStatus(issuanceInDTO.getStatus());
         issuance.setIssuanceType(issuanceInDTO.getIssuanceType());
-        issuance.setIssueTime(issuanceInDTO.getIssueTime());
+        if (issuanceInDTO.getIssueTime() != null) {
+            issuance.setIssueTime(issuanceInDTO.getIssueTime());
+        }
         issuance.setReturnTime(issuanceInDTO.getReturnTime());
 
         issuance.setUser(user);

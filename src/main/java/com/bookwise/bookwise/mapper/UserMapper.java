@@ -33,7 +33,10 @@ public final class UserMapper {
         user.setEmail(registerRequestDTO.getEmail());
         user.setMobileNumber(registerRequestDTO.getMobileNumber());
         user.setRole(registerRequestDTO.getRole());
-        user.setPassword(registerRequestDTO.getPassword());
+
+        if (registerRequestDTO.getPassword() != null || !registerRequestDTO.getPassword().isEmpty()) {
+            user.setPassword(registerRequestDTO.getPassword());
+        }
 
         return user;
     }

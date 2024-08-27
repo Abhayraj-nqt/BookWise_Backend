@@ -12,11 +12,15 @@ import com.bookwise.bookwise.repository.BookRepository;
 import com.bookwise.bookwise.repository.CategoryRepository;
 import com.bookwise.bookwise.service.IBookService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,35 @@ public class BookServiceImpl implements IBookService {
 
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
+
+    @Override
+    public List<BookOutDTO> getAllBooks(Sort sort) {
+        return bookRepository.findAll(sort).stream()
+                .map(book -> BookMapper.mapToBookOutDTO(book, new BookOutDTO()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<BookOutDTO> getBooks(Pageable pageable, String search) {
+        Page<Book> bookPage;
+        if (search != null && !search.isEmpty()) {
+            bookPage = bookRepository.findByTitleContainingIgnoreCase(search, pageable);
+        } else {
+            bookPage = bookRepository.findAll(pageable);
+        }
+
+        return  bookPage.map(book -> BookMapper.mapToBookOutDTO(book, new BookOutDTO()));
+    }
+
+    @Override
+    public Long getBookTitleCount() {
+        return bookRepository.count();
+    }
+
+    @Override
+    public Long getTotalBooksCount() {
+        return bookRepository.getTotalBooksCount();
+    }
 
     @Override
     public List<BookOutDTO> getBooksByAuthor(String author) {

@@ -2,6 +2,8 @@ package com.bookwise.bookwise.repository;
 
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Issuance;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,6 +15,11 @@ import java.util.List;
 
 @Repository
 public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
+
+    Page<Issuance> findByBookContainingIgnoreCase(String book, Pageable pageable);
+
+    @Query("SELECT COUNT(DISTINCT i.user) FROM Issuance i WHERE i.status = 'ISSUED'")
+    Long countDistinctUsersByStatus(String status);
 
     @Query("SELECT i FROM Issuance i WHERE i.user.id = :id")
     List<Issuance> findAllByUserId(Long id);

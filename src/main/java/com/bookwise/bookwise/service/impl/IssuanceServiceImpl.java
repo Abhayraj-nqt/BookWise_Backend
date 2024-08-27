@@ -1,15 +1,21 @@
 package com.bookwise.bookwise.service.impl;
 
+import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceInDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceOutDTO;
+import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Issuance;
 import com.bookwise.bookwise.exception.ResourceNotFoundException;
+import com.bookwise.bookwise.mapper.BookMapper;
 import com.bookwise.bookwise.mapper.IssuanceMapper;
 import com.bookwise.bookwise.repository.BookRepository;
 import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.repository.UserRepository;
 import com.bookwise.bookwise.service.IIssuanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -25,6 +32,30 @@ public class IssuanceServiceImpl implements IIssuanceService {
     private final IssuanceRepository issuanceRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+
+    @Override
+    public List<IssuanceOutDTO> getAllIssuances(Sort sort) {
+        return issuanceRepository.findAll(sort).stream()
+                .map(issuance -> IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<IssuanceOutDTO> getIssuances(Pageable pageable, String search) {
+        Page<Issuance> issuancePage;
+        if (search != null && !search.isEmpty()) {
+            issuancePage = issuanceRepository.findByBookContainingIgnoreCase(search, pageable);
+        } else {
+            issuancePage = issuanceRepository.findAll(pageable);
+        }
+
+        return  issuancePage.map(issuance -> IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO()));
+    }
+
+    @Override
+    public Long getTotalActiveUsers() {
+        return issuanceRepository.countDistinctUsersByStatus("ISSUED");
+    }
 
     @Override
     public IssuanceOutDTO createIssuance(IssuanceInDTO issuanceInDTO) {
@@ -68,6 +99,14 @@ public class IssuanceServiceImpl implements IIssuanceService {
         );
 
         issuance = IssuanceMapper.mapToIssuance(issuanceInDTO, issuance, userRepository, bookRepository);
+
+        if (issuance.getStatus().equals("RETURNED")) {
+            if (issuance.getReturnTime() == null) {
+                issuance.setReturnTime(LocalDateTime.now());
+            }
+        } else {
+            issuance.setReturnTime(null);
+        }
 
         Issuance savedIssuance = issuanceRepository.save(issuance);
 

@@ -2,10 +2,16 @@ package com.bookwise.bookwise.service;
 
 import com.bookwise.bookwise.dto.user.RegisterRequestDTO;
 import com.bookwise.bookwise.dto.user.UserDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
 public interface IUserService {
+
+    List<UserDTO> getAllUsers(Sort sort);
+    Page<UserDTO> getUsers(Pageable pageable, String search);
 
     UserDTO getUserByEmail(String email);
     UserDTO getUserByMobile(String mobileNumber);

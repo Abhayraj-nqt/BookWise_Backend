@@ -12,6 +12,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +28,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -33,6 +37,25 @@ public class UserServiceImpl implements IUserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final Environment env;
+
+    @Override
+    public List<UserDTO> getAllUsers(Sort sort) {
+        return userRepository.findByRole("ROLE_USER", sort).stream()
+                .map(user -> UserMapper.mapToUserDTO(user, new UserDTO()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<UserDTO> getUsers(Pageable pageable, String search) {
+        Page<User> userPage;
+        if (search != null && !search.isEmpty()) {
+            userPage = userRepository.findByMobileNumberContainingIgnoreCaseAndRole(search, "ROLE_USER", pageable);
+        } else {
+            userPage = userRepository.findByRole("ROLE_USER", pageable);
+        }
+
+        return userPage.map(user -> UserMapper.mapToUserDTO(user, new UserDTO()));
+    }
 
     @Override
     public UserDTO getUserByEmail(String email) {

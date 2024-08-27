@@ -1,12 +1,19 @@
 package com.bookwise.bookwise.service;
 
 import com.bookwise.bookwise.dto.category.CategoryDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
 public interface ICategoryService {
 
-    List<CategoryDTO> getCategories();
+//    List<CategoryDTO> getCategories();
+    List<CategoryDTO> getAllCategories(Sort sort);
+//    Page<CategoryDTO> getCategories(Pageable pageable);
+    Page<CategoryDTO> getCategories(Pageable pageable, String search);
+
     Long getCategoryCount();
 
     CategoryDTO getCategoryById(Long id);

@@ -66,6 +66,7 @@ public class SecurityConfig {
                 .requestMatchers( "/api/books/**").hasRole("ADMIN")
                 .requestMatchers( "/api/book/**").hasRole("ADMIN")
                 .requestMatchers( "/api/book").hasRole("ADMIN")
+                .requestMatchers("/api/books", "/api/books/title-count","/api/books/total-count").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/book/**").permitAll()
 
@@ -78,6 +79,8 @@ public class SecurityConfig {
 
 //                Issuance routes
                 .requestMatchers("/api/issuance/**").hasRole("ADMIN")
+                .requestMatchers("/api/issuances").authenticated()
+                .requestMatchers("/api/users/active-count").hasRole("ADMIN")
                 .requestMatchers( HttpMethod.GET, "/api/issuance/**").hasAnyRole("ADMIN", "USER")
 
 

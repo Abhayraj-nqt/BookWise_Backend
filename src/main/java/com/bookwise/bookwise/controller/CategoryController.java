@@ -3,6 +3,10 @@ package com.bookwise.bookwise.controller;
 import com.bookwise.bookwise.dto.category.CategoryDTO;
 import com.bookwise.bookwise.service.ICategoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +21,34 @@ public class CategoryController {
 
     private final ICategoryService iCategoryService;
 
+//    @GetMapping("/categories")
+//    public ResponseEntity<List<CategoryDTO>> getCategories() {
+//        List<CategoryDTO> categoryDTOList = iCategoryService.getCategories();
+//        return ResponseEntity.status(HttpStatus.OK).body(categoryDTOList);
+//    }
+
     @GetMapping("/categories")
-    public ResponseEntity<List<CategoryDTO>> getCategories() {
-        List<CategoryDTO> categoryDTOList = iCategoryService.getCategories();
-        return ResponseEntity.status(HttpStatus.OK).body(categoryDTOList);
+    public ResponseEntity<?> getCategories(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search) {
+
+        if (page == null || size == null) {
+            // Fetch all categories without pagination
+            List<CategoryDTO> categoryDTOList = iCategoryService.getAllCategories(Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+            return ResponseEntity.ok(categoryDTOList);
+        } else {
+            // Apply pagination
+//            Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
+//            Page<CategoryDTO> categoryDTOPage = iCategoryService.getCategories(pageable);
+//            return ResponseEntity.ok(categoryDTOPage);
+
+            Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
+            Page<CategoryDTO> categoryDTOPage = iCategoryService.getCategories(pageable, search);
+            return ResponseEntity.status(HttpStatus.OK).body(categoryDTOPage);
+        }
     }
 
     @GetMapping("/category-count")
