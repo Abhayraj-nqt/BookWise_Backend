@@ -1,8 +1,10 @@
 package com.bookwise.bookwise.controller;
 
+import com.bookwise.bookwise.dto.book.BookHistoryDTO;
 import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceInDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceOutDTO;
+import com.bookwise.bookwise.dto.user.UserHistoryDTO;
 import com.bookwise.bookwise.service.IIssuanceService;
 import com.fasterxml.jackson.core.JsonParser;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,36 @@ public class IssuanceController {
             return ResponseEntity.status(HttpStatus.OK).body(issuanceOutDTOPage);
         }
     }
+
+    @GetMapping("/user/history/{mobile}")
+    public ResponseEntity<Page<UserHistoryDTO>> getUserHistory(@PathVariable String mobile,
+                                            @RequestParam(required = false) Integer page,
+                                            @RequestParam(required = false) Integer size,
+                                            @RequestParam(defaultValue = "id") String sortBy,
+                                            @RequestParam(defaultValue = "asc") String sortDir,
+                                            @RequestParam(required = false) String search) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
+        Page<UserHistoryDTO> userHistoryDTOPage = iIssuanceService.getUserHistory(pageable, mobile);
+
+        return ResponseEntity.status(HttpStatus.OK).body(userHistoryDTOPage);
+    }
+
+    @GetMapping("/book/history/{id}")
+    public ResponseEntity<Page<BookHistoryDTO>> getBookHistory(@PathVariable Long id,
+                                                         @RequestParam(required = false) Integer page,
+                                                         @RequestParam(required = false) Integer size,
+                                                         @RequestParam(defaultValue = "id") String sortBy,
+                                                         @RequestParam(defaultValue = "asc") String sortDir,
+                                                         @RequestParam(required = false) String search) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
+        Page<BookHistoryDTO> bookHistoryDTOPage = iIssuanceService.getBookHistory(pageable, id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(bookHistoryDTOPage);
+    }
+
+
 
     @GetMapping("/users/active-count")
     public ResponseEntity<Long> getTotalActiveUsers() {

@@ -1,10 +1,13 @@
 package com.bookwise.bookwise.service.impl;
 
+import com.bookwise.bookwise.dto.book.BookHistoryDTO;
 import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceInDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceOutDTO;
+import com.bookwise.bookwise.dto.user.UserHistoryDTO;
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Issuance;
+import com.bookwise.bookwise.entity.User;
 import com.bookwise.bookwise.exception.ResourceNotFoundException;
 import com.bookwise.bookwise.mapper.BookMapper;
 import com.bookwise.bookwise.mapper.IssuanceMapper;
@@ -13,9 +16,7 @@ import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.repository.UserRepository;
 import com.bookwise.bookwise.service.IIssuanceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -55,6 +56,59 @@ public class IssuanceServiceImpl implements IIssuanceService {
     @Override
     public Long getTotalActiveUsers() {
         return issuanceRepository.countDistinctUsersByStatus("ISSUED");
+    }
+
+    @Override
+    public Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile) {
+        User user = userRepository.findByMobileNumber(mobile).orElseThrow(
+                () -> new ResourceNotFoundException("User", "mobileNumber", mobile)
+        );
+
+        List<Issuance> issuanceList = issuanceRepository.findAllByUserId(user.getId());
+
+        List<UserHistoryDTO> userHistory = issuanceList.stream().map(issuance -> {
+            UserHistoryDTO dto = new UserHistoryDTO();
+
+            dto.setId(issuance.getId());
+            dto.setBook(BookMapper.mapToBookOutDTO(issuance.getBook(), new BookOutDTO()));
+            dto.setStatus(issuance.getStatus());
+            dto.setType(issuance.getIssuanceType());
+            dto.setIssueTime(issuance.getIssueTime());
+            dto.setExpectedReturnTime(issuance.getReturnTime());
+            dto.setActualReturnTime(issuance.getReturnTime());
+            return dto;
+        }).collect(Collectors.toList());
+
+        // Implement pagination
+//        Pageable pageable = PageRequest.of(page, size);
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), userHistory.size());
+        List<UserHistoryDTO> pagedHistory = userHistory.subList(start, end);
+
+        return new PageImpl<>(pagedHistory, pageable, userHistory.size());
+
+    }
+
+    @Override
+    public Page<BookHistoryDTO> getBookHistory(Pageable pageable, Long id) {
+        List<Issuance> issuanceList = issuanceRepository.findAllByBookId(id);
+        List<BookHistoryDTO> bookHistory = issuanceList.stream().map(issuance -> {
+            BookHistoryDTO dto = new BookHistoryDTO();
+            dto.setId(issuance.getId());
+            dto.setUser(issuance.getUser());
+            dto.setStatus(issuance.getStatus());
+            dto.setType(issuance.getIssuanceType());
+            dto.setIssueTime(issuance.getIssueTime());
+            dto.setExpectedReturnTime(issuance.getReturnTime());
+            dto.setActualReturnTime(issuance.getReturnTime());
+            return dto;
+        }).collect(Collectors.toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), bookHistory.size());
+        List<BookHistoryDTO> pagedHistory = bookHistory.subList(start, end);
+
+        return new PageImpl<>(pagedHistory, pageable, bookHistory.size());
     }
 
     @Override

@@ -18,6 +18,8 @@ public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
 
     Page<Issuance> findByBookContainingIgnoreCase(String book, Pageable pageable);
 
+
+
     @Query("SELECT COUNT(DISTINCT i.user) FROM Issuance i WHERE i.status = 'ISSUED'")
     Long countDistinctUsersByStatus(String status);
 

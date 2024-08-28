@@ -69,13 +69,16 @@ public class SecurityConfig {
                 .requestMatchers("/api/books", "/api/books/title-count","/api/books/total-count").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/book/**").permitAll()
+                .requestMatchers("/api/book/history/**").hasRole("ADMIN")
 
 
 //                User routes
+                .requestMatchers("/api/user/history/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers( "/api/user/**").hasRole("ADMIN")
                 .requestMatchers( "/api/users").hasRole("ADMIN")
                 .requestMatchers( "/api/user-count").hasRole("ADMIN")
                 .requestMatchers( HttpMethod.GET, "/api/user/**").hasAnyRole("ADMIN", "USER")
+
 
 //                Issuance routes
                 .requestMatchers("/api/issuance/**").hasRole("ADMIN")

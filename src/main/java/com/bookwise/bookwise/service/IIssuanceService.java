@@ -1,8 +1,10 @@
 package com.bookwise.bookwise.service;
 
+import com.bookwise.bookwise.dto.book.BookHistoryDTO;
 import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceInDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceOutDTO;
+import com.bookwise.bookwise.dto.user.UserHistoryDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +19,8 @@ public interface IIssuanceService {
     List<IssuanceOutDTO> getAllIssuances(Sort sort);
     Page<IssuanceOutDTO> getIssuances(Pageable pageable, String search);
     Long getTotalActiveUsers();
+    Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile);
+    Page<BookHistoryDTO> getBookHistory(Pageable pageable, Long id);
 
     IssuanceOutDTO createIssuance(IssuanceInDTO issuanceInDTO);
     IssuanceOutDTO getIssuanceById(Long id);
