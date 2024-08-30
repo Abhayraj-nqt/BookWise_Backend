@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Entity
 @Data
-public class Book {
+public class Book extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,13 +15,14 @@ public class Book {
 
     private String author;
 
+    @Column(name = "total_qty")
+    private Long totalQty = 1L;
+
     @Column(name = "avl_qty")
     private Long avlQty = 0L;
 
     private String image;
 
-
-//    @JoinColumn(name = "category", referencedColumnName = "id")
     @ManyToOne
     @JoinColumn(name = "category")
     private Category category;

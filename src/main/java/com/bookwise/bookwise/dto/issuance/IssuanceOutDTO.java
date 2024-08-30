@@ -19,7 +19,9 @@ public class IssuanceOutDTO {
 
     private LocalDateTime issueTime;
 
-    private LocalDateTime returnTime;
+    private LocalDateTime expectedReturnTime;
+
+    private LocalDateTime actualReturnTime;
 
     private String status;
 

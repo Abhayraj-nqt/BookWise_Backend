@@ -5,9 +5,11 @@ import com.bookwise.bookwise.dto.user.UserDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public interface IUserService {
 
     List<UserDTO> getAllUsers(Sort sort);

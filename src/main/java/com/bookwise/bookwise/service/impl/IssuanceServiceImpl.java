@@ -74,8 +74,8 @@ public class IssuanceServiceImpl implements IIssuanceService {
             dto.setStatus(issuance.getStatus());
             dto.setType(issuance.getIssuanceType());
             dto.setIssueTime(issuance.getIssueTime());
-            dto.setExpectedReturnTime(issuance.getReturnTime());
-            dto.setActualReturnTime(issuance.getReturnTime());
+            dto.setExpectedReturnTime(issuance.getExpectedReturnTime());
+            dto.setActualReturnTime(issuance.getActualReturnTime());
             return dto;
         }).collect(Collectors.toList());
 
@@ -99,8 +99,8 @@ public class IssuanceServiceImpl implements IIssuanceService {
             dto.setStatus(issuance.getStatus());
             dto.setType(issuance.getIssuanceType());
             dto.setIssueTime(issuance.getIssueTime());
-            dto.setExpectedReturnTime(issuance.getReturnTime());
-            dto.setActualReturnTime(issuance.getReturnTime());
+            dto.setExpectedReturnTime(issuance.getExpectedReturnTime());
+            dto.setActualReturnTime(issuance.getActualReturnTime());
             return dto;
         }).collect(Collectors.toList());
 
@@ -114,6 +114,18 @@ public class IssuanceServiceImpl implements IIssuanceService {
     @Override
     public IssuanceOutDTO createIssuance(IssuanceInDTO issuanceInDTO) {
         Issuance issuance = IssuanceMapper.mapToIssuance(issuanceInDTO, new Issuance(), userRepository, bookRepository);
+        issuance.setIssueTime(LocalDateTime.now());
+        issuance.setExpectedReturnTime(issuanceInDTO.getReturnTime());
+
+        Book book = issuance.getBook();
+        if (book.getAvlQty() > 0) {
+            book.setAvlQty(book.getAvlQty()-1);
+            bookRepository.save(book);
+        } else {
+            throw new RuntimeException("Book is not available because its avlQty is 0");
+        }
+
+
         Issuance savedIssuance = issuanceRepository.save(issuance);
 
         IssuanceOutDTO issuanceOutDTO = IssuanceMapper.mapToIssuanceOutDTO(savedIssuance, new IssuanceOutDTO());
@@ -152,14 +164,20 @@ public class IssuanceServiceImpl implements IIssuanceService {
                 () -> new ResourceNotFoundException("Issuance", "id", id.toString())
         );
 
+        String oldSattus = issuance.getStatus();
+
         issuance = IssuanceMapper.mapToIssuance(issuanceInDTO, issuance, userRepository, bookRepository);
 
-        if (issuance.getStatus().equals("RETURNED")) {
-            if (issuance.getReturnTime() == null) {
-                issuance.setReturnTime(LocalDateTime.now());
+        if (issuanceInDTO.getStatus().equals("RETURNED") && !oldSattus.equals("RETURNED")) {
+            Book book = issuance.getBook();
+            issuance.setActualReturnTime(LocalDateTime.now());
+            if (book.getAvlQty() < book.getTotalQty()) {
+                book.setAvlQty(book.getAvlQty() + 1);
+                bookRepository.save(book);
             }
+
         } else {
-            issuance.setReturnTime(null);
+            issuance.setActualReturnTime(null);
         }
 
         Issuance savedIssuance = issuanceRepository.save(issuance);
@@ -237,12 +255,12 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
     @Override
     public List<IssuanceOutDTO> getAllIssuanceByReturnDate(LocalDate date) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDate(date);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDate(date);
+//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//
+//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
 
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
+        return null;
     }
 
     @Override
@@ -257,12 +275,12 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
     @Override
     public List<IssuanceOutDTO> getAllIssuanceByReturnTime(LocalTime time) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByReturnTime(time);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnTime(time);
+//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//
+//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
 
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
+        return null;
     }
 
     @Override
@@ -277,12 +295,12 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
     @Override
     public List<IssuanceOutDTO> getAllIssuanceByReturnDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDateRange(startDate, endDate);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDateRange(startDate, endDate);
+//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//
+//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
 
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
+        return null;
     }
 
 
