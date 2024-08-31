@@ -126,6 +126,9 @@ public class UserServiceImpl implements IUserService {
     public UserDTO registerUser(RegisterRequestDTO registerRequestDTO) {
         User user = UserMapper.mapToUser(registerRequestDTO, new User());
         user.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            user.setRole("ROLE_USER");
+        }
         User savedUser = userRepository.save(user);
         UserDTO userDTO = UserMapper.mapToUserDTO(savedUser, new UserDTO());
         return  userDTO;
@@ -139,6 +142,9 @@ public class UserServiceImpl implements IUserService {
 
         user = UserMapper.mapToUser(registerRequestDTO, user);
         user.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            user.setRole("ROLE_USER");
+        }
 
         User updatedUser = userRepository.save(user);
 

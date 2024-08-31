@@ -1,10 +1,13 @@
 package com.bookwise.bookwise.service.impl;
 
+import com.bookwise.bookwise.dto.book.BookHistoryDTO;
 import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceInDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceOutDTO;
+import com.bookwise.bookwise.dto.user.UserHistoryDTO;
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Issuance;
+import com.bookwise.bookwise.entity.User;
 import com.bookwise.bookwise.exception.ResourceNotFoundException;
 import com.bookwise.bookwise.mapper.BookMapper;
 import com.bookwise.bookwise.mapper.IssuanceMapper;
@@ -13,9 +16,7 @@ import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.repository.UserRepository;
 import com.bookwise.bookwise.service.IIssuanceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -58,8 +59,73 @@ public class IssuanceServiceImpl implements IIssuanceService {
     }
 
     @Override
+    public Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile) {
+        User user = userRepository.findByMobileNumber(mobile).orElseThrow(
+                () -> new ResourceNotFoundException("User", "mobileNumber", mobile)
+        );
+
+        List<Issuance> issuanceList = issuanceRepository.findAllByUserId(user.getId());
+
+        List<UserHistoryDTO> userHistory = issuanceList.stream().map(issuance -> {
+            UserHistoryDTO dto = new UserHistoryDTO();
+
+            dto.setId(issuance.getId());
+            dto.setBook(BookMapper.mapToBookOutDTO(issuance.getBook(), new BookOutDTO()));
+            dto.setStatus(issuance.getStatus());
+            dto.setType(issuance.getIssuanceType());
+            dto.setIssueTime(issuance.getIssueTime());
+            dto.setExpectedReturnTime(issuance.getExpectedReturnTime());
+            dto.setActualReturnTime(issuance.getActualReturnTime());
+            return dto;
+        }).collect(Collectors.toList());
+
+        // Implement pagination
+//        Pageable pageable = PageRequest.of(page, size);
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), userHistory.size());
+        List<UserHistoryDTO> pagedHistory = userHistory.subList(start, end);
+
+        return new PageImpl<>(pagedHistory, pageable, userHistory.size());
+
+    }
+
+    @Override
+    public Page<BookHistoryDTO> getBookHistory(Pageable pageable, Long id) {
+        List<Issuance> issuanceList = issuanceRepository.findAllByBookId(id);
+        List<BookHistoryDTO> bookHistory = issuanceList.stream().map(issuance -> {
+            BookHistoryDTO dto = new BookHistoryDTO();
+            dto.setId(issuance.getId());
+            dto.setUser(issuance.getUser());
+            dto.setStatus(issuance.getStatus());
+            dto.setType(issuance.getIssuanceType());
+            dto.setIssueTime(issuance.getIssueTime());
+            dto.setExpectedReturnTime(issuance.getExpectedReturnTime());
+            dto.setActualReturnTime(issuance.getActualReturnTime());
+            return dto;
+        }).collect(Collectors.toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), bookHistory.size());
+        List<BookHistoryDTO> pagedHistory = bookHistory.subList(start, end);
+
+        return new PageImpl<>(pagedHistory, pageable, bookHistory.size());
+    }
+
+    @Override
     public IssuanceOutDTO createIssuance(IssuanceInDTO issuanceInDTO) {
         Issuance issuance = IssuanceMapper.mapToIssuance(issuanceInDTO, new Issuance(), userRepository, bookRepository);
+        issuance.setIssueTime(LocalDateTime.now());
+        issuance.setExpectedReturnTime(issuanceInDTO.getReturnTime());
+
+        Book book = issuance.getBook();
+        if (book.getAvlQty() > 0) {
+            book.setAvlQty(book.getAvlQty()-1);
+            bookRepository.save(book);
+        } else {
+            throw new RuntimeException("Book is not available because its avlQty is 0");
+        }
+
+
         Issuance savedIssuance = issuanceRepository.save(issuance);
 
         IssuanceOutDTO issuanceOutDTO = IssuanceMapper.mapToIssuanceOutDTO(savedIssuance, new IssuanceOutDTO());
@@ -98,14 +164,20 @@ public class IssuanceServiceImpl implements IIssuanceService {
                 () -> new ResourceNotFoundException("Issuance", "id", id.toString())
         );
 
+        String oldSattus = issuance.getStatus();
+
         issuance = IssuanceMapper.mapToIssuance(issuanceInDTO, issuance, userRepository, bookRepository);
 
-        if (issuance.getStatus().equals("RETURNED")) {
-            if (issuance.getReturnTime() == null) {
-                issuance.setReturnTime(LocalDateTime.now());
+        if (issuanceInDTO.getStatus().equals("RETURNED") && !oldSattus.equals("RETURNED")) {
+            Book book = issuance.getBook();
+            issuance.setActualReturnTime(LocalDateTime.now());
+            if (book.getAvlQty() < book.getTotalQty()) {
+                book.setAvlQty(book.getAvlQty() + 1);
+                bookRepository.save(book);
             }
+
         } else {
-            issuance.setReturnTime(null);
+            issuance.setActualReturnTime(null);
         }
 
         Issuance savedIssuance = issuanceRepository.save(issuance);
@@ -183,12 +255,12 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
     @Override
     public List<IssuanceOutDTO> getAllIssuanceByReturnDate(LocalDate date) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDate(date);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDate(date);
+//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//
+//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
 
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
+        return null;
     }
 
     @Override
@@ -203,12 +275,12 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
     @Override
     public List<IssuanceOutDTO> getAllIssuanceByReturnTime(LocalTime time) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByReturnTime(time);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnTime(time);
+//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//
+//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
 
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
+        return null;
     }
 
     @Override
@@ -223,12 +295,12 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
     @Override
     public List<IssuanceOutDTO> getAllIssuanceByReturnDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDateRange(startDate, endDate);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDateRange(startDate, endDate);
+//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
+//
+//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
 
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
+        return null;
     }
 
 

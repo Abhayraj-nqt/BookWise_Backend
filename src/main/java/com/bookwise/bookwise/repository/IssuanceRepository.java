@@ -18,6 +18,8 @@ public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
 
     Page<Issuance> findByBookContainingIgnoreCase(String book, Pageable pageable);
 
+
+
     @Query("SELECT COUNT(DISTINCT i.user) FROM Issuance i WHERE i.status = 'ISSUED'")
     Long countDistinctUsersByStatus(String status);
 
@@ -37,22 +39,22 @@ public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
     @Query("SELECT i FROM Issuance i WHERE DATE(i.issueTime) = :date")
     List<Issuance> findAllByIssueDate(LocalDate date);
 
-    @Query("SELECT i FROM Issuance i WHERE DATE(i.returnTime) = :date")
-    List<Issuance> findAllByReturnDate(LocalDate date);
+//    @Query("SELECT i FROM Issuance i WHERE DATE(i.returnTime) = :date")
+//    List<Issuance> findAllByReturnDate(LocalDate date);
 
     // Time-only query
     @Query("SELECT i FROM Issuance i WHERE TIME(i.issueTime) = :time")
     List<Issuance> findAllByIssueTime(LocalTime time);
 
-    @Query("SELECT i FROM Issuance i WHERE TIME(i.returnTime) = :time")
-    List<Issuance> findAllByReturnTime(LocalTime time);
+//    @Query("SELECT i FROM Issuance i WHERE TIME(i.returnTime) = :time")
+//    List<Issuance> findAllByReturnTime(LocalTime time);
 
     // Date range query
     @Query("SELECT i FROM Issuance i WHERE i.issueTime BETWEEN :startDate AND :endDate")
     List<Issuance> findAllByIssueDateRange(LocalDateTime startDate, LocalDateTime endDate);
 
-    @Query("SELECT i FROM Issuance i WHERE i.returnTime BETWEEN :startDate AND :endDate")
-    List<Issuance> findAllByReturnDateRange(LocalDateTime startDate, LocalDateTime endDate);
+//    @Query("SELECT i FROM Issuance i WHERE i.returnTime BETWEEN :startDate AND :endDate")
+//    List<Issuance> findAllByReturnDateRange(LocalDateTime startDate, LocalDateTime endDate);
 
     // Specific user and book query
     @Query("SELECT i FROM Issuance i WHERE i.user.id = :userId AND i.book.id = :bookId")

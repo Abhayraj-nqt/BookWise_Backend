@@ -16,13 +16,13 @@ public class IssuanceInDTO {
     @NotEmpty(message = "Book can not be a null or empty")
     private Long book;
 
-    private LocalDateTime issueTime;
+//    private LocalDateTime issueTime;
 
     @NotEmpty(message = "Return time can not be a null or empty")
     private LocalDateTime returnTime;
 
-//    @NotEmpty(message = "Status can not be a null or empty")
-    private String status = "";
+    @NotEmpty(message = "Status can not be a null or empty")
+    private String status;
 
     @NotEmpty(message = "Issuance type can not be a null or empty")
     private String issuanceType;

@@ -12,6 +12,8 @@ public class BookOutDTO {
 
     private String author;
 
+    private Long totalQty;
+
     private Long avlQty;
 
     private String image;

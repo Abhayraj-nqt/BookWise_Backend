@@ -148,7 +148,14 @@ public class BookServiceImpl implements IBookService {
                 () -> new ResourceNotFoundException("Book", "id", id.toString())
         );
 
+        Long prevTotalQty = book.getTotalQty();
+        Long prevAvlQty = book.getAvlQty();
+
         book = BookMapper.mapToBook(bookInDTO, book, categoryRepository);
+
+        Long newTotalQty = bookInDTO.getTotalQty();
+        Long newAvlQty = prevAvlQty + (newTotalQty-prevTotalQty);
+        book.setAvlQty(newAvlQty);
 
         Book savedBook = bookRepository.save(book);
 

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-public class Issuance {
+public class Issuance extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +24,13 @@ public class Issuance {
     @Column(name = "issue_time")
     private LocalDateTime issueTime;
 
-    @Column(name = "return_time")
-    private LocalDateTime returnTime;
+    @Column(name = "expected_return_time")
+    private LocalDateTime expectedReturnTime;
 
-    private String status = "";
+    @Column(name = "actual_return_time")
+    private LocalDateTime actualReturnTime;
+
+    private String status;
 
     @Column(name = "issuance_type")
     private String issuanceType;

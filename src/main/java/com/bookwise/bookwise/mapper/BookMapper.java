@@ -17,6 +17,7 @@ public final class BookMapper {
         bookOutDTO.setId(book.getId());
         bookOutDTO.setTitle(book.getTitle());
         bookOutDTO.setAuthor(book.getAuthor());
+        bookOutDTO.setTotalQty(book.getTotalQty());
         bookOutDTO.setAvlQty(book.getAvlQty());
         bookOutDTO.setImage(book.getImage());
         bookOutDTO.setCategory(CategoryMapper.mapToCategoryDTO(book.getCategory(), new CategoryDTO()));
@@ -30,7 +31,13 @@ public final class BookMapper {
         );
         book.setTitle(bookInDTO.getTitle());
         book.setAuthor(bookInDTO.getAuthor());
-        book.setAvlQty(bookInDTO.getAvlQty());
+//        if (book.getAvlQty() == null || book.getTotalQty() == null) {
+//            book.setAvlQty(bookInDTO.getTotalQty());
+//        } else {
+//            Long newQty = book.getAvlQty() + bookInDTO.getTotalQty() - book.getAvlQty();
+//        }
+        book.setAvlQty(bookInDTO.getTotalQty());
+        book.setTotalQty(bookInDTO.getTotalQty());
         book.setImage(bookInDTO.getImage());
         book.setCategory(category);
 

@@ -18,7 +18,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         String message = (accessDeniedException != null && accessDeniedException.getMessage() != null)
                 ? accessDeniedException.getMessage() : "Authorization failed";
         String path = request.getRequestURI();
-        response.setHeader("quickcart-denied-reason", "Authorization failed");
+        response.setHeader("bookwise-denied-reason", "Authorization failed");
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType("application/json;charset=UTF-8");
 

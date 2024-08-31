@@ -11,7 +11,7 @@ public class BookInDTO {
 
     private String author;
 
-    private Long avlQty = 0L;
+    private Long totalQty;
 
     private String image;
 
