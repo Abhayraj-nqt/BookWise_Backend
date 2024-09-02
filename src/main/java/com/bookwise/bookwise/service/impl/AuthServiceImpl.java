@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,11 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     public UserDTO login(LoginRequestDTO loginRequestDTO) {
+        String encodedPassword = loginRequestDTO.getPassword();
+        byte[] decodedBytes = Base64.getDecoder().decode(encodedPassword);
+        String decodedPassword = new String(decodedBytes);
+        loginRequestDTO.setPassword(decodedPassword);
+
         String jwt = "";
         Authentication authentication = UsernamePasswordAuthenticationToken.unauthenticated(loginRequestDTO.getUsername(),
                 loginRequestDTO.getPassword());

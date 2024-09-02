@@ -6,7 +6,9 @@ import com.bookwise.bookwise.dto.user.UserDTO;
 import com.bookwise.bookwise.entity.User;
 import com.bookwise.bookwise.mapper.UserMapper;
 import com.bookwise.bookwise.repository.UserRepository;
+import com.bookwise.bookwise.service.ISMSService;
 import com.bookwise.bookwise.service.IUserService;
+import com.bookwise.bookwise.utils.PasswordGenerator;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +38,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
+    private final ISMSService ismsService;
     private final PasswordEncoder passwordEncoder;
     private final Environment env;
 
@@ -125,11 +129,28 @@ public class UserServiceImpl implements IUserService {
     @Override
     public UserDTO registerUser(RegisterRequestDTO registerRequestDTO) {
         User user = UserMapper.mapToUser(registerRequestDTO, new User());
-        user.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
+
+        String randomPassword = PasswordGenerator.generatePassword(10);
+        System.out.println("PASSWORD -> " + randomPassword);
+
+        user.setPassword(passwordEncoder.encode(randomPassword));
         if (user.getRole() == null || user.getRole().isEmpty()) {
             user.setRole("ROLE_USER");
         }
+
         User savedUser = userRepository.save(user);
+
+//        String message = String.format( "Welcome %s\n" +
+//                                        "You have successfully registered to BookWise\n" +
+//                                        "Username: %s (OR) %s\n" +
+//                                        "Password: %s",
+//                savedUser.getName(),
+//                savedUser.getMobileNumber(),
+//                savedUser.getEmail(),
+//                randomPassword);
+//
+//        ismsService.sendSms(savedUser.getMobileNumber(), message);
+
         UserDTO userDTO = UserMapper.mapToUserDTO(savedUser, new UserDTO());
         return  userDTO;
     }
@@ -141,7 +162,15 @@ public class UserServiceImpl implements IUserService {
         );
 
         user = UserMapper.mapToUser(registerRequestDTO, user);
-        user.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
+
+        if (registerRequestDTO.getPassword() != null && registerRequestDTO.getPassword().length() >= 6) {
+            String encodedPassword = registerRequestDTO.getPassword();
+            byte[] decodedBytes = Base64.getDecoder().decode(encodedPassword);
+            String decodedPassword = new String(decodedBytes);
+            registerRequestDTO.setPassword(decodedPassword);
+            user.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
+        }
+
         if (user.getRole() == null || user.getRole().isEmpty()) {
             user.setRole("ROLE_USER");
         }

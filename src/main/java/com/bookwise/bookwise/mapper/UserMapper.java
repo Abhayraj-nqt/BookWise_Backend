@@ -34,9 +34,9 @@ public final class UserMapper {
         user.setMobileNumber(registerRequestDTO.getMobileNumber());
         user.setRole(registerRequestDTO.getRole());
 
-        if (registerRequestDTO.getPassword() != null || !registerRequestDTO.getPassword().isEmpty()) {
-            user.setPassword(registerRequestDTO.getPassword());
-        }
+//        if (registerRequestDTO.getPassword() != null || !registerRequestDTO.getPassword().isEmpty()) {
+//            user.setPassword(registerRequestDTO.getPassword());
+//        }
 
         return user;
     }

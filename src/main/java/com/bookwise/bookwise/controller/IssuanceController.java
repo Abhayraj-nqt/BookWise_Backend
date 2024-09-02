@@ -48,18 +48,29 @@ public class IssuanceController {
     }
 
     @GetMapping("/user/history/{mobile}")
-    public ResponseEntity<Page<UserHistoryDTO>> getUserHistory(@PathVariable String mobile,
-                                            @RequestParam(required = false) Integer page,
-                                            @RequestParam(required = false) Integer size,
-                                            @RequestParam(defaultValue = "id") String sortBy,
-                                            @RequestParam(defaultValue = "asc") String sortDir,
-                                            @RequestParam(required = false) String search) {
+    public ResponseEntity<Page<UserHistoryDTO>> getUserHistory(
+            @PathVariable String mobile,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) List<String> titles,
+            @RequestParam(required = false) LocalDateTime issueTimeFrom,
+            @RequestParam(required = false) LocalDateTime issueTimeTo,
+            @RequestParam(required = false) LocalDateTime expectedReturnTimeFrom,
+            @RequestParam(required = false) LocalDateTime expectedReturnTimeTo,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String type) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
-        Page<UserHistoryDTO> userHistoryDTOPage = iIssuanceService.getUserHistory(pageable, mobile);
+        Page<UserHistoryDTO> userHistoryDTOPage = iIssuanceService.getUserHistory(
+                pageable, mobile, titles, issueTimeFrom, issueTimeTo,
+                expectedReturnTimeFrom, expectedReturnTimeTo, status, type
+        );
 
         return ResponseEntity.status(HttpStatus.OK).body(userHistoryDTOPage);
     }
+
 
     @GetMapping("/book/history/{id}")
     public ResponseEntity<Page<BookHistoryDTO>> getBookHistory(@PathVariable Long id,
@@ -74,8 +85,6 @@ public class IssuanceController {
 
         return ResponseEntity.status(HttpStatus.OK).body(bookHistoryDTOPage);
     }
-
-
 
     @GetMapping("/users/active-count")
     public ResponseEntity<Long> getTotalActiveUsers() {

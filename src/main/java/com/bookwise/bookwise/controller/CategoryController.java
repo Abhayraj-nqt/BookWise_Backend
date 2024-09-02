@@ -21,12 +21,6 @@ public class CategoryController {
 
     private final ICategoryService iCategoryService;
 
-//    @GetMapping("/categories")
-//    public ResponseEntity<List<CategoryDTO>> getCategories() {
-//        List<CategoryDTO> categoryDTOList = iCategoryService.getCategories();
-//        return ResponseEntity.status(HttpStatus.OK).body(categoryDTOList);
-//    }
-
     @GetMapping("/categories")
     public ResponseEntity<?> getCategories(
             @RequestParam(required = false) Integer page,
@@ -40,11 +34,6 @@ public class CategoryController {
             List<CategoryDTO> categoryDTOList = iCategoryService.getAllCategories(Sort.by(Sort.Direction.fromString(sortDir), sortBy));
             return ResponseEntity.ok(categoryDTOList);
         } else {
-            // Apply pagination
-//            Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
-//            Page<CategoryDTO> categoryDTOPage = iCategoryService.getCategories(pageable);
-//            return ResponseEntity.ok(categoryDTOPage);
-
             Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
             Page<CategoryDTO> categoryDTOPage = iCategoryService.getCategories(pageable, search);
             return ResponseEntity.status(HttpStatus.OK).body(categoryDTOPage);

@@ -15,6 +15,7 @@ import com.bookwise.bookwise.repository.BookRepository;
 import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.repository.UserRepository;
 import com.bookwise.bookwise.service.IIssuanceService;
+import com.bookwise.bookwise.service.ISMSService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class IssuanceServiceImpl implements IIssuanceService {
     private final IssuanceRepository issuanceRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final ISMSService ismsService;
 
     @Override
     public List<IssuanceOutDTO> getAllIssuances(Sort sort) {
@@ -51,6 +53,20 @@ public class IssuanceServiceImpl implements IIssuanceService {
         }
 
         return  issuancePage.map(issuance -> IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO()));
+    }
+
+    @Override
+    public Page<IssuanceOutDTO> getIssuances(Pageable pageable, List<String> titles,
+                                             LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
+                                             LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
+                                             String status, String type) {
+
+        Page<Issuance> issuancePage = issuanceRepository.filterIssuances(titles, issueTimeFrom, issueTimeTo, expectedReturnTimeFrom, expectedReturnTimeTo, status, type, pageable);
+
+        List<IssuanceOutDTO> issuanceOutDTOPage = issuancePage.stream().map(issuance -> IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO()))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(issuanceOutDTOPage, pageable, issuancePage.getTotalElements());
     }
 
     @Override
@@ -90,6 +106,35 @@ public class IssuanceServiceImpl implements IIssuanceService {
     }
 
     @Override
+    public Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile, List<String> titles,
+                                               LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
+                                               LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
+                                               String status, String type) {
+        User user = userRepository.findByMobileNumber(mobile).orElseThrow(
+                () -> new ResourceNotFoundException("User", "mobileNumber", mobile)
+        );
+
+        Page<Issuance> issuancePage = issuanceRepository.filterUserHistory(
+                user.getId(), titles, issueTimeFrom, issueTimeTo,
+                expectedReturnTimeFrom, expectedReturnTimeTo, status, type, pageable
+        );
+
+        List<UserHistoryDTO> userHistory = issuancePage.stream().map(issuance -> {
+            UserHistoryDTO dto = new UserHistoryDTO();
+            dto.setId(issuance.getId());
+            dto.setBook(BookMapper.mapToBookOutDTO(issuance.getBook(), new BookOutDTO()));
+            dto.setStatus(issuance.getStatus());
+            dto.setType(issuance.getIssuanceType());
+            dto.setIssueTime(issuance.getIssueTime());
+            dto.setExpectedReturnTime(issuance.getExpectedReturnTime());
+            dto.setActualReturnTime(issuance.getActualReturnTime());
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new PageImpl<>(userHistory, pageable, issuancePage.getTotalElements());
+    }
+
+    @Override
     public Page<BookHistoryDTO> getBookHistory(Pageable pageable, Long id) {
         List<Issuance> issuanceList = issuanceRepository.findAllByBookId(id);
         List<BookHistoryDTO> bookHistory = issuanceList.stream().map(issuance -> {
@@ -122,11 +167,18 @@ public class IssuanceServiceImpl implements IIssuanceService {
             book.setAvlQty(book.getAvlQty()-1);
             bookRepository.save(book);
         } else {
-            throw new RuntimeException("Book is not available because its avlQty is 0");
+            throw new RuntimeException("The book is out of stock!");
         }
 
 
         Issuance savedIssuance = issuanceRepository.save(issuance);
+
+//        String message = String.format("Info: You have issued the book '%s'\nFrom %s\nTo %s",
+//                savedIssuance.getBook().getTitle(),
+//                savedIssuance.getIssueTime().toLocalDate(),
+//                savedIssuance.getExpectedReturnTime().toLocalDate());
+//
+//        ismsService.sendSms(savedIssuance.getUser().getMobileNumber(), message);
 
         IssuanceOutDTO issuanceOutDTO = IssuanceMapper.mapToIssuanceOutDTO(savedIssuance, new IssuanceOutDTO());
 
@@ -175,6 +227,8 @@ public class IssuanceServiceImpl implements IIssuanceService {
                 book.setAvlQty(book.getAvlQty() + 1);
                 bookRepository.save(book);
             }
+
+        } else if (issuanceInDTO.getStatus().equals("RETURNED") && oldSattus.equals("RETURNED")) {
 
         } else {
             issuance.setActualReturnTime(null);

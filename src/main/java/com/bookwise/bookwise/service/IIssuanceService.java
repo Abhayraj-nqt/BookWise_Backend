@@ -18,10 +18,20 @@ import java.util.List;
 @Service
 public interface IIssuanceService {
 
+    Page<IssuanceOutDTO> getIssuances(Pageable pageable, List<String> titles,
+                                      LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
+                                      LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
+                                      String status, String type);
+
     List<IssuanceOutDTO> getAllIssuances(Sort sort);
     Page<IssuanceOutDTO> getIssuances(Pageable pageable, String search);
     Long getTotalActiveUsers();
     Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile);
+    Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile, List<String> titles,
+                                        LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
+                                        LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
+                                        String status, String type);
+
     Page<BookHistoryDTO> getBookHistory(Pageable pageable, Long id);
 
     IssuanceOutDTO createIssuance(IssuanceInDTO issuanceInDTO);
