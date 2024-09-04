@@ -40,7 +40,8 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
-                        config.setAllowedOrigins(Collections.singletonList("http://localhost:5173/"));
+//                        config.setAllowedOrigins(Collections.singletonList("http://localhost:5173/"));
+                        config.setAllowedOrigins(Arrays.asList("http://localhost:5173/", "http://localhost:3000/"));
                         config.setAllowedMethods(Collections.singletonList("*"));
                         config.setAllowedHeaders(Collections.singletonList("*"));
                         config.setAllowCredentials(true);
@@ -53,7 +54,7 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests((requests) -> requests
 //                Other routes
-                .requestMatchers("/api/login", "/api/error").permitAll()
+                .requestMatchers("/api/login", "/api/error", "/error").permitAll()
                 .requestMatchers("/api/register").hasRole("ADMIN")
                 .requestMatchers("/api/current-user").authenticated()
 
@@ -81,12 +82,12 @@ public class SecurityConfig {
 
 
 //                Issuance routes
-                .requestMatchers("/api/issuance/**").hasRole("ADMIN")
+                .requestMatchers("/api/issuance/**", "/api/all-issuances").hasRole("ADMIN")
                 .requestMatchers("/api/issuances").authenticated()
                 .requestMatchers("/api/users/active-count").hasRole("ADMIN")
                 .requestMatchers( HttpMethod.GET, "/api/issuance/**").hasAnyRole("ADMIN", "USER")
 
-
+                .requestMatchers("/api/admin", "/api/admin/statistics").hasRole("ADMIN")
 //                        .requestMatchers("/**").permitAll()
 
         );

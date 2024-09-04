@@ -1,10 +1,13 @@
 package com.bookwise.bookwise.service.impl;
 
 import com.bookwise.bookwise.dto.category.CategoryDTO;
+import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Category;
 import com.bookwise.bookwise.exception.ResourceNotFoundException;
 import com.bookwise.bookwise.mapper.CategoryMapper;
+import com.bookwise.bookwise.repository.BookRepository;
 import com.bookwise.bookwise.repository.CategoryRepository;
+import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.service.ICategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,15 +24,8 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements ICategoryService {
 
     private final CategoryRepository categoryRepository;
-
-//    @Override
-//    public List<CategoryDTO> getCategories() {
-//        List<Category> categoryList = categoryRepository.findAll();
-//        List<CategoryDTO> categoryDTOList = new ArrayList<>();
-//        categoryList.forEach(category -> categoryDTOList.add(CategoryMapper.mapToCategoryDTO(category, new CategoryDTO())));
-//
-//        return categoryDTOList;
-//    }
+    private final BookRepository bookRepository;
+    private final IssuanceRepository issuanceRepository;
 
     @Override
     public List<CategoryDTO> getAllCategories(Sort sort) {
@@ -37,12 +33,6 @@ public class CategoryServiceImpl implements ICategoryService {
                 .map(category -> CategoryMapper.mapToCategoryDTO(category, new CategoryDTO()))
                 .collect(Collectors.toList());
     }
-
-//    @Override
-//    public Page<CategoryDTO> getCategories(Pageable pageable) {
-//        Page<Category> categoryPage = categoryRepository.findAll(pageable);
-//        return categoryPage.map(category -> CategoryMapper.mapToCategoryDTO(category, new CategoryDTO()));
-//    }
 
     @Override
     public Page<CategoryDTO> getCategories(Pageable pageable, String search) {
@@ -56,28 +46,12 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public Long getCategoryCount() {
-        return categoryRepository.count();
-    }
-
-    @Override
     public CategoryDTO getCategoryById(Long id) {
         Category category = categoryRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Category", "id", id.toString())
         );
 
         CategoryDTO categoryDTO = CategoryMapper.mapToCategoryDTO(category, new CategoryDTO());
-        return categoryDTO;
-    }
-
-    @Override
-    public CategoryDTO getCategoryByName(String name) {
-        Category category = categoryRepository.findByName(name).orElseThrow(
-                () -> new ResourceNotFoundException("Category", "name", name)
-        );
-
-        CategoryDTO categoryDTO = CategoryMapper.mapToCategoryDTO(category, new CategoryDTO());
-
         return categoryDTO;
     }
 
@@ -109,20 +83,21 @@ public class CategoryServiceImpl implements ICategoryService {
         Category category = categoryRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Category", "id", id.toString())
         );
-        categoryRepository.deleteById(id);
-        CategoryDTO categoryDTO = CategoryMapper.mapToCategoryDTO(category, new CategoryDTO());
 
-        return categoryDTO;
-    }
+        boolean isBookIssued = issuanceRepository.existsByBookCategoryIdAndStatus(category.getId(), "Issued");
 
-    @Override
-    public CategoryDTO deleteCategoryByName(String name) {
-        Category category = categoryRepository.findByName(name).orElseThrow(
-                () -> new ResourceNotFoundException("Customer", "name", name)
-        );
+        if (isBookIssued) {
+            throw new IllegalStateException("Cannot delete category as books from this category are currently issued.");
+        }
+
+        List<Book> books = bookRepository.findAllByCategory(category.getId());
+        issuanceRepository.deleteAllByBookIn(books);
+        bookRepository.deleteAll(books);
         categoryRepository.deleteById(category.getId());
+
         CategoryDTO categoryDTO = CategoryMapper.mapToCategoryDTO(category, new CategoryDTO());
 
         return categoryDTO;
     }
+
 }

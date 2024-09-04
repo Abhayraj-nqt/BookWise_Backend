@@ -1,10 +1,11 @@
 package com.bookwise.bookwise.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 @Entity
-@Data
+@Getter @Setter @ToString
+@RequiredArgsConstructor
 public class Book extends BaseEntity {
 
     @Id
@@ -26,6 +27,5 @@ public class Book extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "category")
     private Category category;
-//    private Long category;
 
 }

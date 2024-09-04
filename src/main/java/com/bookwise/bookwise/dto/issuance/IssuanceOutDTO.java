@@ -4,11 +4,14 @@ import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.user.UserDTO;
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.User;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class IssuanceOutDTO {
 
     private Long id;

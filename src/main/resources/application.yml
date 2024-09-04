@@ -22,6 +22,6 @@ twilio:
   account:
     sid: ${TWILIO_ACCOUNT_SID:ACcb4bed65b875e2349ca56c7c67c99d4e}
   auth:
-    token: ${TWILIO_AUTH_TOKEN:93af76fe009c5d2385e655247e3a81b1}
+    token: ${TWILIO_AUTH_TOKEN:399debf2b2e307453573bfb061cfb29f}
   phone:
     number: ${TWILIO_PHONE_NUMBER:+12562696971}

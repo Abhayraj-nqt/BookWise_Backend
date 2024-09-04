@@ -1,12 +1,15 @@
 package com.bookwise.bookwise.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class Issuance extends BaseEntity {
 
     @Id
@@ -38,7 +41,7 @@ public class Issuance extends BaseEntity {
     @PrePersist
     protected void onCreate() {
         this.issueTime = LocalDateTime.now();
-        this.status = "ISSUED";
+        this.status = "Issued";
     }
 
 }

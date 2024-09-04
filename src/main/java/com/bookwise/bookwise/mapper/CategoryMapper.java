@@ -13,7 +13,6 @@ public final class CategoryMapper {
     }
 
     public static Category mapToCategory(CategoryDTO categoryDTO, Category category) {
-//        category.setId(categoryDTO.getId());
         category.setName(categoryDTO.getName());
         return category;
     }

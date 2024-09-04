@@ -1,9 +1,10 @@
 package com.bookwise.bookwise.dto.book;
 
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter @Setter @ToString
+@RequiredArgsConstructor
 public class BookInDTO {
 
     @NotEmpty(message = "Title can not be a null or empty")
@@ -11,6 +12,7 @@ public class BookInDTO {
 
     private String author;
 
+    @NotEmpty(message = "Quantity can not be a null or empty")
     private Long totalQty;
 
     private String image;

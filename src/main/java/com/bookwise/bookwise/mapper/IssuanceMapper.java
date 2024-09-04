@@ -44,16 +44,6 @@ public final class IssuanceMapper {
         issuance.setBook(book);
 
         issuance.setExpectedReturnTime(issuanceInDTO.getReturnTime());
-//        issuance.setUpdatedAt(LocalDateTime.now());
-
-//        if (issuanceInDTO.getIssueTime() != null) {
-//            issuance.setIssueTime(issuanceInDTO.getIssueTime());
-//        }
-
-
-//        issuance.setExpectedReturnTime(issuanceInDTO.getReturnTime());
-
-
 
         return issuance;
     }

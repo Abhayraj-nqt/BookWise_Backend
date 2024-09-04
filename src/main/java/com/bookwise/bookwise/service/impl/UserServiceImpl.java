@@ -5,6 +5,7 @@ import com.bookwise.bookwise.dto.user.RegisterRequestDTO;
 import com.bookwise.bookwise.dto.user.UserDTO;
 import com.bookwise.bookwise.entity.User;
 import com.bookwise.bookwise.mapper.UserMapper;
+import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.repository.UserRepository;
 import com.bookwise.bookwise.service.ISMSService;
 import com.bookwise.bookwise.service.IUserService;
@@ -30,6 +31,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +42,7 @@ public class UserServiceImpl implements IUserService {
     private final UserRepository userRepository;
     private final ISMSService ismsService;
     private final PasswordEncoder passwordEncoder;
+    private final IssuanceRepository issuanceRepository;
     private final Environment env;
 
     @Override
@@ -62,18 +65,6 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserDTO getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new UsernameNotFoundException("User not found for " + email)
-        );
-
-        UserDTO userDTO = UserMapper.mapToUserDTO(user, new UserDTO());
-
-        return userDTO;
-
-    }
-
-    @Override
     public UserDTO getUserByMobile(String mobileNumber) {
         User user = userRepository.findByMobileNumber(mobileNumber).orElseThrow(
                 () -> new UsernameNotFoundException("User not found for " + mobileNumber)
@@ -86,31 +77,15 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public List<UserDTO> getAllUsers() {
-        List<User> userList = userRepository.findAll();
-        List<UserDTO> userDTOList = new ArrayList<>();
-
-        userList.forEach(user -> userDTOList.add(UserMapper.mapToUserDTO(user, new UserDTO())));
-        return userDTOList;
-    }
-
-    @Override
-    public Long getUserCount() {
-        Long userCount = userRepository.count();
-        return userCount;
-    }
-
-    @Override
-    public UserDTO deleteUserByEmail(String email) {
+    public UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new UsernameNotFoundException("User not found for " + email)
         );
 
-        userRepository.deleteById(user.getId());
-
         UserDTO userDTO = UserMapper.mapToUserDTO(user, new UserDTO());
 
         return userDTO;
+
     }
 
     @Override
@@ -119,6 +94,13 @@ public class UserServiceImpl implements IUserService {
                 () -> new UsernameNotFoundException("User not found for " + mobileNumber)
         );
 
+        boolean isBookIssued = issuanceRepository.existsByUserIdAndStatus(user.getId(), "Issued");
+
+        if (isBookIssued) {
+            throw new IllegalStateException("The user has issued some books and cannot be deleted.");
+        }
+
+        issuanceRepository.deleteAllByUserIn(Collections.singletonList(user));
         userRepository.deleteById(user.getId());
 
         UserDTO userDTO = UserMapper.mapToUserDTO(user, new UserDTO());
@@ -140,15 +122,17 @@ public class UserServiceImpl implements IUserService {
 
         User savedUser = userRepository.save(user);
 
-//        String message = String.format( "Welcome %s\n" +
-//                                        "You have successfully registered to BookWise\n" +
-//                                        "Username: %s (OR) %s\n" +
-//                                        "Password: %s",
-//                savedUser.getName(),
-//                savedUser.getMobileNumber(),
-//                savedUser.getEmail(),
-//                randomPassword);
-//
+        String message = String.format( "\nWelcome %s\n" +
+                                        "You have successfully registered to BookWise\n" +
+                                        "These are your login credentials\n" +
+                                        "Username: %s (OR) %s\n" +
+                                        "Password: %s",
+                savedUser.getName(),
+                savedUser.getMobileNumber(),
+                savedUser.getEmail(),
+                randomPassword);
+
+//        ismsService.verifyNumber(savedUser.getMobileNumber());
 //        ismsService.sendSms(savedUser.getMobileNumber(), message);
 
         UserDTO userDTO = UserMapper.mapToUserDTO(savedUser, new UserDTO());
@@ -163,7 +147,7 @@ public class UserServiceImpl implements IUserService {
 
         user = UserMapper.mapToUser(registerRequestDTO, user);
 
-        if (registerRequestDTO.getPassword() != null && registerRequestDTO.getPassword().length() >= 6) {
+        if (registerRequestDTO.getPassword() != null && registerRequestDTO.getPassword().length() >= 3) {
             String encodedPassword = registerRequestDTO.getPassword();
             byte[] decodedBytes = Base64.getDecoder().decode(encodedPassword);
             String decodedPassword = new String(decodedBytes);
@@ -183,33 +167,4 @@ public class UserServiceImpl implements IUserService {
 
     }
 
-    @Override
-    public UserDTO getUserByToken(String jwt) {
-        String secret = env.getProperty(JWTConstants.JWT_SECRET_KEY, JWTConstants.JWT_SECRET_DEFAULT_VALUE);
-        SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        Claims claims = Jwts.parser().verifyWith(secretKey)
-                .build().parseSignedClaims(jwt).getPayload();
-        String username = String.valueOf(claims.get("username"));
-
-        if (username.contains("@")) {
-//                            email
-            User user = userRepository.findByEmail(username).orElseThrow(
-                    () -> new BadCredentialsException("Invalid Token received!")
-            );
-
-            UserDTO userDTO = UserMapper.mapToUserDTO(user, new UserDTO());
-            userDTO.setToken(jwt);
-            return  userDTO;
-        } else {
-//                            mobile
-            User user = userRepository.findByMobileNumber(username).orElseThrow(
-                    () -> new BadCredentialsException("Invalid Token received!")
-            );
-
-            UserDTO userDTO = UserMapper.mapToUserDTO(user, new UserDTO());
-            userDTO.setToken(jwt);
-            return  userDTO;
-        }
-
-    }
 }

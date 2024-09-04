@@ -1,6 +1,8 @@
 package com.bookwise.bookwise.controller;
 
 import com.bookwise.bookwise.constants.JWTConstants;
+import com.bookwise.bookwise.dto.auth.LoginResponseDTO;
+import com.bookwise.bookwise.dto.response.ResponseDTO;
 import com.bookwise.bookwise.dto.user.UserDTO;
 import com.bookwise.bookwise.dto.auth.LoginRequestDTO;
 import com.bookwise.bookwise.service.IAuthService;
@@ -36,26 +38,24 @@ public class AuthController {
     private final IAuthService iAuthService;
 
     @PostMapping("/login")
-    public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
 
-        UserDTO userDTO = iAuthService.login(loginRequestDTO);
+        LoginResponseDTO loginResponseDTO = iAuthService.login(loginRequestDTO);
 
-        return ResponseEntity.status(HttpStatus.OK).header(JWTConstants.JWT_HEADER,userDTO.getToken())
-                .body(userDTO);
+        return ResponseEntity.status(HttpStatus.OK).header(JWTConstants.JWT_HEADER,loginResponseDTO.getToken())
+                .body(loginResponseDTO);
 
     }
 
-
     @GetMapping("/current-user")
-    public ResponseEntity<UserDTO> currentUser(@RequestHeader("Authorization") String token) {
-        UserDTO user = iUserService.getUserByToken(token);
-        return ResponseEntity.status(HttpStatus.OK).body(user);
+    public ResponseEntity<?> currentUser(@RequestHeader("Authorization") String token) {
+        LoginResponseDTO loginResponseDTO = iAuthService.getUserByToken(token);
 
-//        if (user != null) {
-//            return ResponseEntity.ok(user);
-//        } else {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-//        }
+        if (loginResponseDTO != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(loginResponseDTO);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDTO(HttpStatus.UNAUTHORIZED.toString(), "Invalid token"));
+        }
     }
 
 }

@@ -1,8 +1,9 @@
 package com.bookwise.bookwise.dto.category;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter @Setter @ToString
+@RequiredArgsConstructor
 public class CategoryDTO {
 
     private Long id;

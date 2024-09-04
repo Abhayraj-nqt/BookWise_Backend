@@ -1,6 +1,8 @@
 package com.bookwise.bookwise.controller;
 
+import com.bookwise.bookwise.constants.CategoryConstants;
 import com.bookwise.bookwise.dto.category.CategoryDTO;
+import com.bookwise.bookwise.dto.response.ResponseDTO;
 import com.bookwise.bookwise.service.ICategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -40,36 +42,28 @@ public class CategoryController {
         }
     }
 
-    @GetMapping("/category-count")
-    public ResponseEntity<Long> getCategoryCount() {
-        Long categoryCount = iCategoryService.getCategoryCount();
-        return ResponseEntity.status(HttpStatus.OK).body(categoryCount);
-    }
-
     @GetMapping("/category/{id}")
     public ResponseEntity<CategoryDTO> getCategory(@PathVariable Long id) {
         CategoryDTO categoryDTO = iCategoryService.getCategoryById(id);
         return ResponseEntity.status(HttpStatus.OK).body(categoryDTO);
     }
 
-
-
     @PostMapping("/category")
-    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
         CategoryDTO savedCategoryDTO = iCategoryService.createCategory(categoryDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCategoryDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), CategoryConstants.CATEGORY_CREATE_MSG));
     }
 
     @PutMapping("/category/{id}")
-    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
         CategoryDTO updatedCategoryDTO = iCategoryService.updateCategory(id, categoryDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedCategoryDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), CategoryConstants.CATEGORY_UPDATE_MSG));
     }
 
     @DeleteMapping("/category/{id}")
-    public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO> deleteCategory(@PathVariable Long id) {
         CategoryDTO categoryDTO = iCategoryService.deleteCategoryById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(categoryDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), CategoryConstants.CATEGORY_DELETE_MSG));
     }
 
 }

@@ -12,7 +12,6 @@ public final class UserMapper {
         userDTO.setEmail(user.getEmail());
         userDTO.setMobileNumber(user.getMobileNumber());
         userDTO.setRole(user.getRole());
-        userDTO.setToken(null);
 
         return userDTO;
     }
@@ -23,7 +22,6 @@ public final class UserMapper {
         user.setEmail(userDTO.getEmail());
         user.setMobileNumber(userDTO.getMobileNumber());
         user.setRole(userDTO.getRole());
-//        user.setPassword(userDTO.getPassword());
 
         return user;
     }
@@ -33,10 +31,6 @@ public final class UserMapper {
         user.setEmail(registerRequestDTO.getEmail());
         user.setMobileNumber(registerRequestDTO.getMobileNumber());
         user.setRole(registerRequestDTO.getRole());
-
-//        if (registerRequestDTO.getPassword() != null || !registerRequestDTO.getPassword().isEmpty()) {
-//            user.setPassword(registerRequestDTO.getPassword());
-//        }
 
         return user;
     }
