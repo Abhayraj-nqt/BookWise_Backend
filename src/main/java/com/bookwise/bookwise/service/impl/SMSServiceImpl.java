@@ -59,7 +59,7 @@ public class SMSServiceImpl implements ISMSService {
                     new PhoneNumber(twilioFromPhoneNumber),
                     message
             ).create();
-
+            System.out.println("SMS sent to " + toPhoneNumber);
         } catch (Exception e) {
             System.err.println("Failed to send SMS: " + e.getMessage());
             e.printStackTrace();

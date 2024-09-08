@@ -20,8 +20,8 @@ logging:
 
 twilio:
   account:
-    sid: ${TWILIO_ACCOUNT_SID:ACcb4bed65b875e2349ca56c7c67c99d4e}
+    sid: ${TWILIO_ACCOUNT_SID:ACcb4bed65b975e2349ca56c7c67c99d4f}
   auth:
-    token: ${TWILIO_AUTH_TOKEN:399debf2b2e307453573bfb061cfb29f}
+    token: ${TWILIO_AUTH_TOKEN:612b2c42dc1f85ea7ed3e057eb0eefdf}
   phone:
-    number: ${TWILIO_PHONE_NUMBER:+12562696971}
+    number: ${TWILIO_PHONE_NUMBER:+12562596972}

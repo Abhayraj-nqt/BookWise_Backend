@@ -1,38 +1,25 @@
 package com.bookwise.bookwise.service.impl;
 
-import com.bookwise.bookwise.constants.JWTConstants;
 import com.bookwise.bookwise.dto.user.RegisterRequestDTO;
 import com.bookwise.bookwise.dto.user.UserDTO;
 import com.bookwise.bookwise.entity.User;
+import com.bookwise.bookwise.exception.ResourceAlreadyExistsException;
 import com.bookwise.bookwise.mapper.UserMapper;
 import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.repository.UserRepository;
 import com.bookwise.bookwise.service.ISMSService;
 import com.bookwise.bookwise.service.IUserService;
 import com.bookwise.bookwise.utils.PasswordGenerator;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -110,6 +97,17 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserDTO registerUser(RegisterRequestDTO registerRequestDTO) {
+
+        Optional<User> optionalUser = userRepository.findByMobileNumber(registerRequestDTO.getMobileNumber());
+        if (optionalUser.isPresent()) {
+            throw new ResourceAlreadyExistsException("User already exists for mobile no. " + registerRequestDTO.getMobileNumber());
+        }
+
+        optionalUser = userRepository.findByEmail(registerRequestDTO.getEmail());
+        if (optionalUser.isPresent()) {
+            throw new ResourceAlreadyExistsException("User already exists for email " + registerRequestDTO.getEmail());
+        }
+
         User user = UserMapper.mapToUser(registerRequestDTO, new User());
 
         String randomPassword = PasswordGenerator.generatePassword(10);
@@ -132,8 +130,7 @@ public class UserServiceImpl implements IUserService {
                 savedUser.getEmail(),
                 randomPassword);
 
-//        ismsService.verifyNumber(savedUser.getMobileNumber());
-//        ismsService.sendSms(savedUser.getMobileNumber(), message);
+        ismsService.sendSms(savedUser.getMobileNumber(), message);
 
         UserDTO userDTO = UserMapper.mapToUserDTO(savedUser, new UserDTO());
         return  userDTO;

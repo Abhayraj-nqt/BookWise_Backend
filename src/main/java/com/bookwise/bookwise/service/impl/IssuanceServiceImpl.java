@@ -60,11 +60,13 @@ public class IssuanceServiceImpl implements IIssuanceService {
     public Page<IssuanceOutDTO> getIssuances(Pageable pageable, List<String> titles,
                                              LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
                                              LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
-                                             String status, String type) {
+                                             String status, String type, String search) {
 
-        Page<Issuance> issuancePage = issuanceRepository.filterIssuances(titles, issueTimeFrom, issueTimeTo, expectedReturnTimeFrom, expectedReturnTimeTo, status, type, pageable);
+        Page<Issuance> issuancePage = issuanceRepository.filterIssuances(
+                titles, issueTimeFrom, issueTimeTo, expectedReturnTimeFrom, expectedReturnTimeTo, status, type, search, pageable);
 
-        List<IssuanceOutDTO> issuanceOutDTOPage = issuancePage.stream().map(issuance -> IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO()))
+        List<IssuanceOutDTO> issuanceOutDTOPage = issuancePage.stream()
+                .map(issuance -> IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO()))
                 .collect(Collectors.toList());
 
         return new PageImpl<>(issuanceOutDTOPage, pageable, issuancePage.getTotalElements());
@@ -147,7 +149,9 @@ public class IssuanceServiceImpl implements IIssuanceService {
                 savedIssuance.getIssueTime().toLocalDate(),
                 savedIssuance.getExpectedReturnTime().toLocalDate());
 
-//        ismsService.sendSms(savedIssuance.getUser().getMobileNumber(), message);
+        if (savedIssuance.getIssuanceType().equals(IssuanceConstants.ISSUANCE_TYPE_TAKE_AWAY)) {
+            ismsService.sendSms(savedIssuance.getUser().getMobileNumber(), message);
+        }
 
         IssuanceOutDTO issuanceOutDTO = IssuanceMapper.mapToIssuanceOutDTO(savedIssuance, new IssuanceOutDTO());
 
@@ -189,8 +193,8 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
         issuance = IssuanceMapper.mapToIssuance(issuanceInDTO, issuance, userRepository, bookRepository);
 
-        if (issuanceInDTO.getStatus().equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED) && !oldSattus.equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED)) {
-            Book book = issuance.getBook();
+        Book book = issuance.getBook();
+        if (issuanceInDTO.getStatus().equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED) && oldSattus.equals(IssuanceConstants.ISSUANCE_STATUS_ISSUED)) {
             issuance.setActualReturnTime(LocalDateTime.now());
             if (book.getAvlQty() < book.getTotalQty()) {
                 book.setAvlQty(book.getAvlQty() + 1);
@@ -199,6 +203,12 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
         } else if (issuanceInDTO.getStatus().equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED) && oldSattus.equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED)) {
 
+        } else if (issuanceInDTO.getStatus().equals(IssuanceConstants.ISSUANCE_STATUS_ISSUED) && oldSattus.equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED)) {
+            if (book.getAvlQty() > 0) {
+                book.setAvlQty(book.getAvlQty() - 1);
+                bookRepository.save(book);
+            }
+            issuance.setActualReturnTime(null);
         } else {
             issuance.setActualReturnTime(null);
         }

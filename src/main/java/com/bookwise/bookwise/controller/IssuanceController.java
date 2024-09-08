@@ -32,24 +32,7 @@ public class IssuanceController {
 
     private final IIssuanceService iIssuanceService;
 
-//    @GetMapping("/issuances")
-//    public ResponseEntity<?> getIssuances(
-//            @RequestParam(required = false) Integer page,
-//            @RequestParam(required = false) Integer size,
-//            @RequestParam(defaultValue = "id") String sortBy,
-//            @RequestParam(defaultValue = "asc") String sortDir,
-//            @RequestParam(required = false) String search) {
-//        if (page == null || size == null) {
-//            List<IssuanceOutDTO> issuanceOutDTOList = iIssuanceService.getAllIssuances(Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-//            return ResponseEntity.ok(issuanceOutDTOList);
-//        } else {
-//            Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
-//            Page<IssuanceOutDTO> issuanceOutDTOPage = iIssuanceService.getIssuances(pageable, search);
-//            return ResponseEntity.status(HttpStatus.OK).body(issuanceOutDTOPage);
-//        }
-//    }
-
-    @GetMapping("issuances")
+    @GetMapping("/issuances")
     public ResponseEntity<Page<IssuanceOutDTO>> getAllIssuances (
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
@@ -69,7 +52,7 @@ public class IssuanceController {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
         Page<IssuanceOutDTO> issuanceOutDTOPage = iIssuanceService.getIssuances(pageable, titles, issueTimeFrom, issueTimeTo,
                 expectedReturnTimeFrom, expectedReturnTimeTo,
-                status, type);
+                status, type, search);
 
         return ResponseEntity.status(HttpStatus.OK).body(issuanceOutDTOPage);
 

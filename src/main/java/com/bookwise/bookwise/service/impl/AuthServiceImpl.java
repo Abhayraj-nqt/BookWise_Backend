@@ -40,7 +40,6 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        System.out.println("Login service called");
         String encodedPassword = loginRequestDTO.getPassword();
         byte[] decodedBytes = Base64.getDecoder().decode(encodedPassword);
         String decodedPassword = new String(decodedBytes);

@@ -12,9 +12,7 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-    Optional<Category> findByName(String name);
-
     Page<Category> findAll(Pageable pageable);
     Page<Category> findByNameContainingIgnoreCase(String name, Pageable pageable);
-
+    Optional<Category> findByName(String name);
 }

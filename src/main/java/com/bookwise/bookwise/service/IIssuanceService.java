@@ -21,7 +21,7 @@ public interface IIssuanceService {
     Page<IssuanceOutDTO> getIssuances(Pageable pageable, List<String> titles,
                                       LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
                                       LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
-                                      String status, String type);
+                                      String status, String type, String search);
     List<IssuanceOutDTO> getAllIssuances(Sort sort);
     Page<IssuanceOutDTO> getIssuances(Pageable pageable, String search);
 

@@ -3,6 +3,7 @@ package com.bookwise.bookwise.service.impl;
 import com.bookwise.bookwise.dto.category.CategoryDTO;
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Category;
+import com.bookwise.bookwise.exception.ResourceAlreadyExistsException;
 import com.bookwise.bookwise.exception.ResourceNotFoundException;
 import com.bookwise.bookwise.mapper.CategoryMapper;
 import com.bookwise.bookwise.repository.BookRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,6 +59,13 @@ public class CategoryServiceImpl implements ICategoryService {
 
     @Override
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
+
+        Optional<Category> optionalCategory = categoryRepository.findByName(categoryDTO.getName());
+
+        if (optionalCategory.isPresent()) {
+            throw new ResourceAlreadyExistsException("Category already exists with the same name");
+        }
+
         Category category = CategoryMapper.mapToCategory(categoryDTO, new Category());
         Category savedCategory = categoryRepository.save(category);
 

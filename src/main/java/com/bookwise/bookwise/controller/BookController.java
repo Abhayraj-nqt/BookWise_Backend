@@ -73,32 +73,4 @@ public class BookController {
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), BookConstants.BOOK_DELETE_MSG));
     }
 
-
-
-//    --------------------- SHOULD BE DELETED -----------------------------------
-
-//    @GetMapping("/books/title-count")
-//    public ResponseEntity<Long> getBookTitleCount() {
-//        Long count = iBookService.getBookTitleCount();
-//        return ResponseEntity.status(HttpStatus.OK).body(count);
-//    }
-
-//    @GetMapping("/books/total-count")
-//    public ResponseEntity<Long> getTotalBooksCount() {
-//        Long count = iBookService.getTotalBooksCount();
-//        return ResponseEntity.status(HttpStatus.OK).body(count);
-//    }
-
-//    @GetMapping("/books/author/{author}")
-//    public ResponseEntity<List<BookOutDTO>> getBooksByAuthor(@PathVariable String author) {
-//        List<BookOutDTO> bookOutDTOList = iBookService.getBooksByAuthor(author);
-//        return ResponseEntity.status(HttpStatus.OK).body(bookOutDTOList);
-//    }
-
-//    @GetMapping("/books/categoryId/{categoryId}")
-//    public ResponseEntity<List<BookOutDTO>> getBooksByCategoryId(@PathVariable Long categoryId) {
-//        List<BookOutDTO> bookOutDTOList = iBookService.getBooksByCategoryId(categoryId);
-//        return ResponseEntity.status(200).body(bookOutDTOList);
-//    }
-
 }

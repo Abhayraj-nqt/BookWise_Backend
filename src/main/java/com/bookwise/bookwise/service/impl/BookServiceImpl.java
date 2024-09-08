@@ -5,6 +5,7 @@ import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.category.CategoryDTO;
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Category;
+import com.bookwise.bookwise.exception.ResourceAlreadyExistsException;
 import com.bookwise.bookwise.exception.ResourceNotFoundException;
 import com.bookwise.bookwise.mapper.BookMapper;
 import com.bookwise.bookwise.mapper.CategoryMapper;
@@ -98,6 +99,12 @@ public class BookServiceImpl implements IBookService {
 
     @Override
     public BookOutDTO createBook(BookInDTO bookInDTO) {
+
+        Optional<Book> optionalBook = bookRepository.findByTitle(bookInDTO.getTitle());
+
+        if (optionalBook.isPresent()) {
+            throw new ResourceAlreadyExistsException("Book already exists with the same title.");
+        }
 
         Book book = BookMapper.mapToBook(bookInDTO, new Book(), categoryRepository);
         Book savedBook = bookRepository.save(book);

@@ -9,6 +9,9 @@ import com.bookwise.bookwise.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class DashboardStatisticsServiceImpl implements IDashboardStatisticsService {
@@ -20,6 +23,10 @@ public class DashboardStatisticsServiceImpl implements IDashboardStatisticsServi
 
     @Override
     public DashboardStatisticsDTO getStatistics() {
+
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+
         DashboardStatisticsDTO dashboardStatisticsDTO = new DashboardStatisticsDTO();
 
         dashboardStatisticsDTO.setTotalCategories(categoryRepository.count());
@@ -30,13 +37,16 @@ public class DashboardStatisticsServiceImpl implements IDashboardStatisticsServi
 
         dashboardStatisticsDTO.setTotalBooks(bookRepository.getTotalBooksCount());
         dashboardStatisticsDTO.setTotalBookTitles(bookRepository.count());
+
         dashboardStatisticsDTO.setAvlBooks(bookRepository.getTotalAvailableBooks());
         dashboardStatisticsDTO.setTotalAvlBookTitles(bookRepository.countByAvlQtyGreaterThan(0));
 
-        dashboardStatisticsDTO.setTotalUsers(userRepository.count());
-        dashboardStatisticsDTO.setTotalActiveUsers(issuanceRepository.countDistinctUsersByStatus("Issued"));
-        dashboardStatisticsDTO.setTotalUsersInLibrary(issuanceRepository.countDistinctUsersInLibraryToday());
+        Long totalUser = userRepository.count() - userRepository.findByRole("ROLE_ADMIN").size();
+        dashboardStatisticsDTO.setTotalUsers(totalUser);
 
+        dashboardStatisticsDTO.setTotalActiveUsers(issuanceRepository.countDistinctUsersByStatus("Issued"));
+
+        dashboardStatisticsDTO.setTotalUsersInLibrary(issuanceRepository.countDistinctUsersInLibraryToday(startOfDay, endOfDay));
 
         return dashboardStatisticsDTO;
     }

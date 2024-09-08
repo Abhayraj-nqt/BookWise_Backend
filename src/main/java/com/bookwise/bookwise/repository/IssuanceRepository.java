@@ -22,24 +22,25 @@ public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
 
     Page<Issuance> findByBookContainingIgnoreCase(String book, Pageable pageable);
 
-    @Query("SELECT i FROM Issuance i " +
-            "WHERE (:titles IS NULL OR i.book.title IN :titles) " +
-            "AND (:issueTimeFrom IS NULL OR i.issueTime >= :issueTimeFrom) " +
-            "AND (:issueTimeTo IS NULL OR i.issueTime <= :issueTimeTo) " +
-            "AND (:expectedReturnTimeFrom IS NULL OR i.expectedReturnTime >= :expectedReturnTimeFrom) " +
-            "AND (:expectedReturnTimeTo IS NULL OR i.expectedReturnTime <= :expectedReturnTimeTo) " +
-            "AND (:status IS NULL OR i.status = :status) " +
-            "AND (:type IS NULL OR i.issuanceType = :type)")
-    Page<Issuance> filterIssuances(
-            @Param("titles") List<String> titles,
-            @Param("issueTimeFrom") LocalDateTime issueTimeFrom,
-            @Param("issueTimeTo") LocalDateTime issueTimeTo,
-            @Param("expectedReturnTimeFrom") LocalDateTime expectedReturnTimeFrom,
-            @Param("expectedReturnTimeTo") LocalDateTime expectedReturnTimeTo,
-            @Param("status") String status,
-            @Param("type") String type,
-            Pageable pageable
-    );
+    @Query("SELECT i FROM Issuance i WHERE " +
+            "(:titles IS NULL OR i.book.title IN :titles) AND " +
+            "(:issueTimeFrom IS NULL OR i.issueTime >= :issueTimeFrom) AND " +
+            "(:issueTimeTo IS NULL OR i.issueTime <= :issueTimeTo) AND " +
+            "(:expectedReturnTimeFrom IS NULL OR i.expectedReturnTime >= :expectedReturnTimeFrom) AND " +
+            "(:expectedReturnTimeTo IS NULL OR i.expectedReturnTime <= :expectedReturnTimeTo) AND " +
+            "(:status IS NULL OR i.status = :status) AND " +
+            "(:issuanceType IS NULL OR i.issuanceType = :issuanceType) AND " +
+            "(:search IS NULL OR LOWER(i.book.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(i.user.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Issuance> filterIssuances(@Param("titles") List<String> titles,
+                                   @Param("issueTimeFrom") LocalDateTime issueTimeFrom,
+                                   @Param("issueTimeTo") LocalDateTime issueTimeTo,
+                                   @Param("expectedReturnTimeFrom") LocalDateTime expectedReturnTimeFrom,
+                                   @Param("expectedReturnTimeTo") LocalDateTime expectedReturnTimeTo,
+                                   @Param("status") String status,
+                                   @Param("issuanceType") String issuanceType,
+                                   @Param("search") String search,
+                                   Pageable pageable);
 
 
     @Query("SELECT i FROM Issuance i " +
@@ -62,8 +63,6 @@ public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
             @Param("type") String type,
             Pageable pageable);
 
-    List<Issuance> findAllByExpectedReturnTime(LocalDateTime expectedReturnTime);
-
 
     @Query("SELECT COUNT(DISTINCT i.user.id) FROM Issuance i WHERE i.status = :status")
     Long countDistinctUsersByStatus(@Param("status") String status);
@@ -71,23 +70,13 @@ public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
     @Query("SELECT COUNT(DISTINCT i.user.id) FROM Issuance i WHERE i.status = :status AND i.issuanceType = :issuanceType")
     Long countDistinctUsersByStatusAndIssuanceType(@Param("status") String status, @Param("issuanceType") String issuanceType);
 
-    @Query("SELECT COUNT(DISTINCT i.user.id) FROM Issuance i WHERE i.issuanceType = 'In house' AND DATE(i.issueTime) = CURRENT_DATE")
-    Long countDistinctUsersInLibraryToday();
-
-
-    @Query("SELECT i FROM Issuance i WHERE i.user.id = :id")
-    List<Issuance> findAllByUserId(Long id);
-
-    @Query("SELECT i FROM Issuance i WHERE i.user.mobileNumber = :mobileNumber")
-    List<Issuance> findAllByUserMobile(String mobileNumber);
+    @Query("SELECT COUNT(DISTINCT i.user.id) FROM Issuance i WHERE i.issuanceType = 'In house' AND i.status = 'Issued' AND i.issueTime BETWEEN :startOfDay AND :endOfDay")
+    Long countDistinctUsersInLibraryToday(@Param("startOfDay") LocalDateTime startOfDay, @Param("endOfDay") LocalDateTime endOfDay);
 
     @Query("SELECT i FROM Issuance i WHERE i.book.id = :id")
     List<Issuance> findAllByBookId(Long id);
 
     boolean existsByBookCategoryIdAndStatus(Long categoryId, String status);
-
-    @Query("SELECT COUNT(i) FROM Issuance i WHERE i.book.category.id = :categoryId AND i.status = 'Issued'")
-    Long countIssuedBooksInCategory(@Param("categoryId") Long categoryId);
 
     @Modifying
     @Transactional
@@ -99,5 +88,8 @@ public interface IssuanceRepository extends JpaRepository<Issuance, Long> {
 
     boolean existsByBookIdAndStatus(Long bookId, String status);
     boolean existsByUserIdAndStatus(Long userId, String status);
+
+    List<Issuance> findAllByExpectedReturnTimeBetweenAndStatus(LocalDateTime start, LocalDateTime end, String status);
+
 
 }

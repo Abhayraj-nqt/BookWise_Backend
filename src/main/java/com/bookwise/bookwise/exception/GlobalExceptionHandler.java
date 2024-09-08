@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,16 +37,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return new ResponseEntity<>(validationErrors, HttpStatus.BAD_REQUEST);
     }
-
-//    @ExceptionHandler(BadCredentialsException.class)
-//    public ResponseEntity<ResponseDTO> handleBadCredentialsException(BadCredentialsException exception, WebRequest webRequest) {
-//        ResponseDTO responseDTO = new ResponseDTO(
-//                HttpStatus.BAD_REQUEST.toString(),
-//                exception.getMessage()
-//        );
-//
-//        return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
-//    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseDTO> handleGlobalException(Exception exception,
@@ -70,9 +60,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ResponseDTO> handleCustomerAlreadyExistsException(UserAlreadyExistsException exception,
-                                                                                 WebRequest webRequest) {
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ResponseDTO> handleCustomerAlreadyExistsException(ResourceAlreadyExistsException exception,
+                                                                            WebRequest webRequest) {
         ResponseDTO errorResponseDto = new ResponseDTO(
                 HttpStatus.BAD_REQUEST.toString(),
                 exception.getMessage()
@@ -87,12 +77,32 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ResponseDTO errorResponseDto = new ResponseDTO(
                 HttpStatus.BAD_REQUEST.toString(),
 //                exception.getMessage()
-                "Database integrity exception"
+                "Operation failed"
         );
 
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ResponseDTO> handleUsernameNotFoundException(UsernameNotFoundException exception,
+                                                                            WebRequest webRequest) {
+        ResponseDTO errorResponseDto = new ResponseDTO(
+                HttpStatus.BAD_REQUEST.toString(),
+                exception.getMessage()
+        );
 
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ResponseDTO> handleBadCredentialsException(BadCredentialsException exception,
+                                                                       WebRequest webRequest) {
+        ResponseDTO errorResponseDto = new ResponseDTO(
+                HttpStatus.BAD_REQUEST.toString(),
+                exception.getMessage()
+        );
+
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+    }
 
 }
