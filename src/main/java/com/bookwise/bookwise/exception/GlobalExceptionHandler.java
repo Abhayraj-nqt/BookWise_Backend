@@ -61,14 +61,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<ResponseDTO> handleCustomerAlreadyExistsException(ResourceAlreadyExistsException exception,
+    public ResponseEntity<ResponseDTO> handleResourceAlreadyExistsException(ResourceAlreadyExistsException exception,
                                                                             WebRequest webRequest) {
         ResponseDTO errorResponseDto = new ResponseDTO(
-                HttpStatus.BAD_REQUEST.toString(),
+                HttpStatus.CONFLICT.toString(),
                 exception.getMessage()
         );
 
-        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
