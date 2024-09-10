@@ -51,7 +51,7 @@ public class CategoryController {
     @PostMapping("/category")
     public ResponseEntity<ResponseDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
         CategoryDTO savedCategoryDTO = iCategoryService.createCategory(categoryDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), CategoryConstants.CATEGORY_CREATE_MSG));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(HttpStatus.CREATED.toString(), CategoryConstants.CATEGORY_CREATE_MSG));
     }
 
     @PutMapping("/category/{id}")

@@ -51,7 +51,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ResponseDTO> registerUser(@RequestBody RegisterRequestDTO registerRequestDTO) {
         UserDTO savedUser = iUserService.registerUser(registerRequestDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), UserConstants.USER_CREATE_MSG));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(HttpStatus.CREATED.toString(), UserConstants.USER_CREATE_MSG));
     }
 
     @PutMapping("/user/{mobileNumber}")

@@ -106,7 +106,7 @@ public class IssuanceController {
     @PostMapping("/issuance")
     public ResponseEntity<ResponseDTO> createIssuance(@RequestBody IssuanceInDTO issuanceInDTO) {
         IssuanceOutDTO issuanceOutDTO = iIssuanceService.createIssuance(issuanceInDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), IssuanceConstants.ISSUANCE_CREATE_MSG));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(HttpStatus.CREATED.toString(), IssuanceConstants.ISSUANCE_CREATE_MSG));
     }
 
     @PutMapping("/issuance/{id}")

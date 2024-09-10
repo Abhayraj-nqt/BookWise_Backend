@@ -54,10 +54,10 @@ public class JWTTokenValidatorFilter extends OncePerRequestFilter {
 
                 String jsonResponse =
                 String.format("{\"status\": %s, \"message\": \"%s\"}",
-                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.UNAUTHORIZED.value(),
                                 message);
 
-                response.setStatus(HttpStatus.BAD_REQUEST.value());
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter().write(jsonResponse);
                 return;
             }

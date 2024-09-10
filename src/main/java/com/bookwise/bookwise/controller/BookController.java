@@ -58,7 +58,7 @@ public class BookController {
     @PostMapping("/book")
     public ResponseEntity<ResponseDTO> createBook(@RequestBody BookInDTO bookInDTO) {
         BookOutDTO bookOutDTO = iBookService.createBook(bookInDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), BookConstants.BOOK_CREATE_MSG));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(HttpStatus.CREATED.toString(), BookConstants.BOOK_CREATE_MSG));
     }
 
     @PutMapping("/book/{id}")

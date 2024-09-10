@@ -87,22 +87,32 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ResponseDTO> handleUsernameNotFoundException(UsernameNotFoundException exception,
                                                                             WebRequest webRequest) {
         ResponseDTO errorResponseDto = new ResponseDTO(
-                HttpStatus.BAD_REQUEST.toString(),
+                HttpStatus.NOT_FOUND.toString(),
                 exception.getMessage()
         );
 
-        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ResponseDTO> handleBadCredentialsException(BadCredentialsException exception,
                                                                        WebRequest webRequest) {
         ResponseDTO errorResponseDto = new ResponseDTO(
-                HttpStatus.BAD_REQUEST.toString(),
+                HttpStatus.UNAUTHORIZED.toString(),
                 exception.getMessage()
         );
 
-        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ResponseDTO> handleIllegalStateException(IllegalStateException exception, WebRequest webRequest) {
+        ResponseDTO errorResponseDto = new ResponseDTO(
+                HttpStatus.METHOD_NOT_ALLOWED.toString(),
+                exception.getMessage()
+        );
+
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
 }
