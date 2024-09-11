@@ -5,11 +5,13 @@ import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.category.CategoryDTO;
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.Category;
+import com.bookwise.bookwise.exception.ResourceAlreadyExistsException;
 import com.bookwise.bookwise.exception.ResourceNotFoundException;
 import com.bookwise.bookwise.mapper.BookMapper;
 import com.bookwise.bookwise.mapper.CategoryMapper;
 import com.bookwise.bookwise.repository.BookRepository;
 import com.bookwise.bookwise.repository.CategoryRepository;
+import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.service.IBookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,6 +31,7 @@ public class BookServiceImpl implements IBookService {
 
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
+    private final IssuanceRepository issuanceRepository;
 
     @Override
     public List<BookOutDTO> getAllBooks(Sort sort) {
@@ -46,35 +50,6 @@ public class BookServiceImpl implements IBookService {
         }
 
         return  bookPage.map(book -> BookMapper.mapToBookOutDTO(book, new BookOutDTO()));
-    }
-
-    @Override
-    public Long getBookTitleCount() {
-        return bookRepository.count();
-    }
-
-    @Override
-    public Long getTotalBooksCount() {
-        return bookRepository.getTotalBooksCount();
-    }
-
-    @Override
-    public List<BookOutDTO> getBooksByAuthor(String author) {
-        List<Book> bookList = bookRepository.findAllByAuthor(author);
-        List<BookOutDTO> bookOutDTOList = new ArrayList<>();
-        bookList.forEach(book -> bookOutDTOList.add(BookMapper.mapToBookOutDTO(book, new BookOutDTO())));
-
-        return bookOutDTOList;
-    }
-
-    @Override
-    public List<BookOutDTO> getBooksByCategoryId(Long id) {
-        List<Book> bookList = bookRepository.findAllByCategory(id);
-
-        List<BookOutDTO> bookOutDTOList = new ArrayList<>();
-        bookList.forEach(book -> bookOutDTOList.add(BookMapper.mapToBookOutDTO(book, new BookOutDTO())));
-
-        return bookOutDTOList;
     }
 
     @Override
@@ -102,26 +77,19 @@ public class BookServiceImpl implements IBookService {
     }
 
     @Override
-    public BookOutDTO deleteBookByTitle(String title) {
-
-        Book book = bookRepository.findByTitle(title).orElseThrow(
-                () -> new ResourceNotFoundException("Book", "title", title)
-        );
-
-        bookRepository.deleteById(book.getId());
-
-        BookOutDTO bookOutDTO = BookMapper.mapToBookOutDTO(book, new BookOutDTO());
-        return bookOutDTO;
-
-    }
-
-    @Override
     public BookOutDTO deleteBookById(Long id) {
 
         Book book = bookRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Book", "id", id.toString())
         );
 
+        boolean isBookIssued = issuanceRepository.existsByBookIdAndStatus(book.getId(), "Issued");
+
+        if (isBookIssued) {
+            throw new IllegalStateException("The book is currently issued and cannot be deleted.");
+        }
+
+        issuanceRepository.deleteAllByBookIn(Collections.singletonList(book));
         bookRepository.deleteById(book.getId());
 
         BookOutDTO bookOutDTO = BookMapper.mapToBookOutDTO(book, new BookOutDTO());
@@ -131,6 +99,12 @@ public class BookServiceImpl implements IBookService {
 
     @Override
     public BookOutDTO createBook(BookInDTO bookInDTO) {
+
+        Optional<Book> optionalBook = bookRepository.findByTitle(bookInDTO.getTitle());
+
+        if (optionalBook.isPresent()) {
+            throw new ResourceAlreadyExistsException("Book already exists with the same title.");
+        }
 
         Book book = BookMapper.mapToBook(bookInDTO, new Book(), categoryRepository);
         Book savedBook = bookRepository.save(book);
@@ -148,6 +122,16 @@ public class BookServiceImpl implements IBookService {
                 () -> new ResourceNotFoundException("Book", "id", id.toString())
         );
 
+        Optional<Book> optionalBook = bookRepository.findByTitle(bookInDTO.getTitle());
+
+        if (optionalBook.isPresent()) {
+            Book otherBook = optionalBook.get();
+
+            if (otherBook.getId() != book.getId()) {
+                throw new ResourceAlreadyExistsException("Book already exists with the same title");
+            }
+        }
+
         Long prevTotalQty = book.getTotalQty();
         Long prevAvlQty = book.getAvlQty();
 
@@ -155,6 +139,9 @@ public class BookServiceImpl implements IBookService {
 
         Long newTotalQty = bookInDTO.getTotalQty();
         Long newAvlQty = prevAvlQty + (newTotalQty-prevTotalQty);
+        if (newAvlQty < 0) {
+            newAvlQty = 0L;
+        }
         book.setAvlQty(newAvlQty);
 
         Book savedBook = bookRepository.save(book);

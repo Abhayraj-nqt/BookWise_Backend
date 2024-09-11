@@ -31,11 +31,6 @@ public final class BookMapper {
         );
         book.setTitle(bookInDTO.getTitle());
         book.setAuthor(bookInDTO.getAuthor());
-//        if (book.getAvlQty() == null || book.getTotalQty() == null) {
-//            book.setAvlQty(bookInDTO.getTotalQty());
-//        } else {
-//            Long newQty = book.getAvlQty() + bookInDTO.getTotalQty() - book.getAvlQty();
-//        }
         book.setAvlQty(bookInDTO.getTotalQty());
         book.setTotalQty(bookInDTO.getTotalQty());
         book.setImage(bookInDTO.getImage());

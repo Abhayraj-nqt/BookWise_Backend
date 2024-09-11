@@ -2,11 +2,14 @@ package com.bookwise.bookwise.dto.user;
 
 import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.entity.User;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class UserHistoryDTO {
 
     private Long id;

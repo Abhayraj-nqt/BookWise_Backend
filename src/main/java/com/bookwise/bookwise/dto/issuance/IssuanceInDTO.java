@@ -3,11 +3,14 @@ package com.bookwise.bookwise.dto.issuance;
 import com.bookwise.bookwise.entity.Book;
 import com.bookwise.bookwise.entity.User;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class IssuanceInDTO {
 
     @NotEmpty(message = "User can not be a null or empty")
@@ -15,8 +18,6 @@ public class IssuanceInDTO {
 
     @NotEmpty(message = "Book can not be a null or empty")
     private Long book;
-
-//    private LocalDateTime issueTime;
 
     @NotEmpty(message = "Return time can not be a null or empty")
     private LocalDateTime returnTime;

@@ -1,14 +1,13 @@
 package com.bookwise.bookwise.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
-@Data
-@AllArgsConstructor
+@Getter @Setter @ToString
+@AllArgsConstructor @RequiredArgsConstructor
 public class ResponseDTO {
 
-    private String statusCode;
+    private String status;
 
-    private String statusMsg;
+    private String message;
 
 }

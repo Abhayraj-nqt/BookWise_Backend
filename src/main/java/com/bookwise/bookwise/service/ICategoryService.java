@@ -11,21 +11,15 @@ import java.util.List;
 @Service
 public interface ICategoryService {
 
-//    List<CategoryDTO> getCategories();
     List<CategoryDTO> getAllCategories(Sort sort);
-//    Page<CategoryDTO> getCategories(Pageable pageable);
     Page<CategoryDTO> getCategories(Pageable pageable, String search);
 
-    Long getCategoryCount();
-
     CategoryDTO getCategoryById(Long id);
-    CategoryDTO getCategoryByName(String name);
 
     CategoryDTO createCategory(CategoryDTO categoryDTO);
 
     CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO);
 
     CategoryDTO deleteCategoryById(Long id);
-    CategoryDTO deleteCategoryByName(String name);
 
 }

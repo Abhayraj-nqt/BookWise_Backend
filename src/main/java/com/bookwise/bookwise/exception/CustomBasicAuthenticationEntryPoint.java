@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 public class CustomBasicAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        // Populate dynamic values
         LocalDateTime currentTimeStamp = LocalDateTime.now();
         String message = (authException != null && authException.getMessage() != null)
                 ? authException.getMessage()
@@ -24,7 +23,6 @@ public class CustomBasicAuthenticationEntryPoint implements AuthenticationEntryP
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json;charset=UTF-8");
 
-        // Construct the JSON response
         String jsonResponse =
                 String.format("{\"timestamp\": \"%s\", \"status\": %d, \"error\": \"%s\", \"message\": \"%s\", \"path\": \"%s\"}",
                         currentTimeStamp, HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),

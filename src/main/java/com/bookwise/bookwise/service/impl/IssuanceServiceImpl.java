@@ -1,5 +1,6 @@
 package com.bookwise.bookwise.service.impl;
 
+import com.bookwise.bookwise.constants.IssuanceConstants;
 import com.bookwise.bookwise.dto.book.BookHistoryDTO;
 import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.issuance.IssuanceInDTO;
@@ -15,6 +16,7 @@ import com.bookwise.bookwise.repository.BookRepository;
 import com.bookwise.bookwise.repository.IssuanceRepository;
 import com.bookwise.bookwise.repository.UserRepository;
 import com.bookwise.bookwise.service.IIssuanceService;
+import com.bookwise.bookwise.service.ISMSService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class IssuanceServiceImpl implements IIssuanceService {
     private final IssuanceRepository issuanceRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final ISMSService ismsService;
 
     @Override
     public List<IssuanceOutDTO> getAllIssuances(Sort sort) {
@@ -54,21 +57,37 @@ public class IssuanceServiceImpl implements IIssuanceService {
     }
 
     @Override
-    public Long getTotalActiveUsers() {
-        return issuanceRepository.countDistinctUsersByStatus("ISSUED");
+    public Page<IssuanceOutDTO> getIssuances(Pageable pageable, List<String> titles,
+                                             LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
+                                             LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
+                                             String status, String type, String search) {
+
+        Page<Issuance> issuancePage = issuanceRepository.filterIssuances(
+                titles, issueTimeFrom, issueTimeTo, expectedReturnTimeFrom, expectedReturnTimeTo, status, type, search, pageable);
+
+        List<IssuanceOutDTO> issuanceOutDTOPage = issuancePage.stream()
+                .map(issuance -> IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO()))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(issuanceOutDTOPage, pageable, issuancePage.getTotalElements());
     }
 
     @Override
-    public Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile) {
+    public Page<UserHistoryDTO> getUserHistory(Pageable pageable, String mobile, List<String> titles,
+                                               LocalDateTime issueTimeFrom, LocalDateTime issueTimeTo,
+                                               LocalDateTime expectedReturnTimeFrom, LocalDateTime expectedReturnTimeTo,
+                                               String status, String type) {
         User user = userRepository.findByMobileNumber(mobile).orElseThrow(
                 () -> new ResourceNotFoundException("User", "mobileNumber", mobile)
         );
 
-        List<Issuance> issuanceList = issuanceRepository.findAllByUserId(user.getId());
+        Page<Issuance> issuancePage = issuanceRepository.filterUserHistory(
+                user.getId(), titles, issueTimeFrom, issueTimeTo,
+                expectedReturnTimeFrom, expectedReturnTimeTo, status, type, pageable
+        );
 
-        List<UserHistoryDTO> userHistory = issuanceList.stream().map(issuance -> {
+        List<UserHistoryDTO> userHistory = issuancePage.stream().map(issuance -> {
             UserHistoryDTO dto = new UserHistoryDTO();
-
             dto.setId(issuance.getId());
             dto.setBook(BookMapper.mapToBookOutDTO(issuance.getBook(), new BookOutDTO()));
             dto.setStatus(issuance.getStatus());
@@ -79,14 +98,7 @@ public class IssuanceServiceImpl implements IIssuanceService {
             return dto;
         }).collect(Collectors.toList());
 
-        // Implement pagination
-//        Pageable pageable = PageRequest.of(page, size);
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), userHistory.size());
-        List<UserHistoryDTO> pagedHistory = userHistory.subList(start, end);
-
-        return new PageImpl<>(pagedHistory, pageable, userHistory.size());
-
+        return new PageImpl<>(userHistory, pageable, issuancePage.getTotalElements());
     }
 
     @Override
@@ -122,11 +134,24 @@ public class IssuanceServiceImpl implements IIssuanceService {
             book.setAvlQty(book.getAvlQty()-1);
             bookRepository.save(book);
         } else {
-            throw new RuntimeException("Book is not available because its avlQty is 0");
+            throw new IllegalStateException("The book quantity is 0 and cannot be issued!");
         }
 
 
         Issuance savedIssuance = issuanceRepository.save(issuance);
+
+        String message = String.format("\nYou have issued the book '%s'\n" +
+                                        "author '%s'\n" +
+                                        "From %s\n" +
+                                        "To %s",
+                savedIssuance.getBook().getTitle(),
+                savedIssuance.getBook().getAuthor(),
+                savedIssuance.getIssueTime().toLocalDate(),
+                savedIssuance.getExpectedReturnTime().toLocalDate());
+
+        if (savedIssuance.getIssuanceType().equals(IssuanceConstants.ISSUANCE_TYPE_TAKE_AWAY)) {
+            ismsService.sendSms(savedIssuance.getUser().getMobileNumber(), message);
+        }
 
         IssuanceOutDTO issuanceOutDTO = IssuanceMapper.mapToIssuanceOutDTO(savedIssuance, new IssuanceOutDTO());
 
@@ -168,14 +193,22 @@ public class IssuanceServiceImpl implements IIssuanceService {
 
         issuance = IssuanceMapper.mapToIssuance(issuanceInDTO, issuance, userRepository, bookRepository);
 
-        if (issuanceInDTO.getStatus().equals("RETURNED") && !oldSattus.equals("RETURNED")) {
-            Book book = issuance.getBook();
+        Book book = issuance.getBook();
+        if (issuanceInDTO.getStatus().equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED) && oldSattus.equals(IssuanceConstants.ISSUANCE_STATUS_ISSUED)) {
             issuance.setActualReturnTime(LocalDateTime.now());
             if (book.getAvlQty() < book.getTotalQty()) {
                 book.setAvlQty(book.getAvlQty() + 1);
                 bookRepository.save(book);
             }
 
+        } else if (issuanceInDTO.getStatus().equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED) && oldSattus.equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED)) {
+
+        } else if (issuanceInDTO.getStatus().equals(IssuanceConstants.ISSUANCE_STATUS_ISSUED) && oldSattus.equals(IssuanceConstants.ISSUANCE_STATUS_RETURNED)) {
+            if (book.getAvlQty() > 0) {
+                book.setAvlQty(book.getAvlQty() - 1);
+                bookRepository.save(book);
+            }
+            issuance.setActualReturnTime(null);
         } else {
             issuance.setActualReturnTime(null);
         }
@@ -187,140 +220,4 @@ public class IssuanceServiceImpl implements IIssuanceService {
         return issuanceOutDTO;
     }
 
-    @Override
-    public IssuanceOutDTO updateStatus(Long id, String newStatus) {
-
-        Issuance issuance = issuanceRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Issuance", "id", id.toString())
-        );
-
-        issuance.setStatus(newStatus);
-        issuanceRepository.save(issuance);
-
-        IssuanceOutDTO issuanceOutDTO = IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO());
-
-        return issuanceOutDTO;
-
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByUserId(Long userId) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByUserId(userId);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByMobile(String mobileNumber) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByUserMobile(mobileNumber);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByBookId(Long bookId) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByBookId(bookId);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByBookTitle(String title) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByBookTitle(title);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByIssueDate(LocalDate date) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByIssueDate(date);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByReturnDate(LocalDate date) {
-//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDate(date);
-//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-//
-//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return null;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByIssueTime(LocalTime time) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByIssueTime(time);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByReturnTime(LocalTime time) {
-//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnTime(time);
-//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-//
-//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return null;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByIssueDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByIssueDateRange(startDate, endDate);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByReturnDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-//        List<Issuance> issuanceList = issuanceRepository.findAllByReturnDateRange(startDate, endDate);
-//        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-//
-//        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return null;
-    }
-
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByUserIdAndBookId(Long userId, Long bookId) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByUserIdAndBookId(userId, bookId);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
-
-    @Override
-    public List<IssuanceOutDTO> getAllIssuanceByMobileAndBookTitle(String mobileNumber, String title) {
-        List<Issuance> issuanceList = issuanceRepository.findAllByUserMobileAndBookTitle(mobileNumber, title);
-        List<IssuanceOutDTO> issuanceOutDTOList = new ArrayList<>();
-
-        issuanceList.forEach(issuance -> issuanceOutDTOList.add(IssuanceMapper.mapToIssuanceOutDTO(issuance, new IssuanceOutDTO())));
-
-        return issuanceOutDTOList;
-    }
 }

@@ -1,9 +1,10 @@
 package com.bookwise.bookwise.dto.book;
 
 import com.bookwise.bookwise.dto.category.CategoryDTO;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter @Setter @ToString
+@RequiredArgsConstructor
 public class BookOutDTO {
 
     private Long id;

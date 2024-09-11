@@ -1,0 +1,49 @@
+CREATE DATABASE IF NOT EXISTS `bookwise_db`;
+
+CREATE TABLE IF NOT EXISTS `category` (
+	id 			INT 				PRIMARY KEY	AUTO_INCREMENT,
+    name 		VARCHAR(100) 		UNIQUE 	KEY NOT NULL,
+    created_at	TIMESTAMP 			NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+    updated_at 	TIMESTAMP			NOT NULL	DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `user` (
+	id 				INT 			PRIMARY KEY AUTO_INCREMENT,
+    name 			VARCHAR(100)	NOT NULL,
+    email 			VARCHAR(100) 	UNIQUE		NOT NULL,
+    mobile_number 	VARCHAR(20) 	UNIQUE 		NOT NULL,
+    password 		VARCHAR(500) 	NOT NULL,
+    role 			VARCHAR(100) 	NOT NULL 	DEFAULT 'ROLE_USER',
+    created_at		TIMESTAMP 		NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+    updated_at 		TIMESTAMP		NOT NULL	DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `book` (
+	id 				INT 			PRIMARY KEY	AUTO_INCREMENT,
+    title 			VARCHAR(500) 	NOT NULL	UNIQUE,
+    author 			VARCHAR(100),
+    total_qty		INT NOT NULL	DEFAULT 0,
+    avl_qty 		INT NOT NULL 	DEFAULT 0,
+    image 			VARCHAR(9999)	NULL,
+    category 		INT,
+    created_at		TIMESTAMP 		NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+    updated_at 		TIMESTAMP		NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(category) REFERENCES `category` (id)
+);
+
+CREATE TABLE IF NOT EXISTS `issuance` (
+	id						INT 			PRIMARY KEY	AUTO_INCREMENT,
+    user    				INT 			NOT NULL,
+    book    				INT 			NOT NULL,
+    issue_time 				TIMESTAMP 		NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+    expected_return_time 	TIMESTAMP		NOT NULL,
+    actual_return_time		TIMESTAMP,
+    status 					VARCHAR(50) 	NOT NULL	DEFAULT 'ISSUED',
+    issuance_type 			VARCHAR(50)		NOT NULL,
+    created_at				TIMESTAMP 		NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+    updated_at 				TIMESTAMP		NOT NULL	DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(user) REFERENCES `user` (id),
+    FOREIGN KEY(book) REFERENCES `book` (id)
+);

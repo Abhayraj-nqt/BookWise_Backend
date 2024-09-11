@@ -1,6 +1,8 @@
 package com.bookwise.bookwise.controller;
 
+import com.bookwise.bookwise.constants.CategoryConstants;
 import com.bookwise.bookwise.dto.category.CategoryDTO;
+import com.bookwise.bookwise.dto.response.ResponseDTO;
 import com.bookwise.bookwise.service.ICategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,12 +23,6 @@ public class CategoryController {
 
     private final ICategoryService iCategoryService;
 
-//    @GetMapping("/categories")
-//    public ResponseEntity<List<CategoryDTO>> getCategories() {
-//        List<CategoryDTO> categoryDTOList = iCategoryService.getCategories();
-//        return ResponseEntity.status(HttpStatus.OK).body(categoryDTOList);
-//    }
-
     @GetMapping("/categories")
     public ResponseEntity<?> getCategories(
             @RequestParam(required = false) Integer page,
@@ -40,21 +36,10 @@ public class CategoryController {
             List<CategoryDTO> categoryDTOList = iCategoryService.getAllCategories(Sort.by(Sort.Direction.fromString(sortDir), sortBy));
             return ResponseEntity.ok(categoryDTOList);
         } else {
-            // Apply pagination
-//            Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
-//            Page<CategoryDTO> categoryDTOPage = iCategoryService.getCategories(pageable);
-//            return ResponseEntity.ok(categoryDTOPage);
-
             Pageable pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortDir), sortBy);
             Page<CategoryDTO> categoryDTOPage = iCategoryService.getCategories(pageable, search);
             return ResponseEntity.status(HttpStatus.OK).body(categoryDTOPage);
         }
-    }
-
-    @GetMapping("/category-count")
-    public ResponseEntity<Long> getCategoryCount() {
-        Long categoryCount = iCategoryService.getCategoryCount();
-        return ResponseEntity.status(HttpStatus.OK).body(categoryCount);
     }
 
     @GetMapping("/category/{id}")
@@ -63,24 +48,22 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK).body(categoryDTO);
     }
 
-
-
     @PostMapping("/category")
-    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
         CategoryDTO savedCategoryDTO = iCategoryService.createCategory(categoryDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCategoryDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(HttpStatus.CREATED.toString(), CategoryConstants.CATEGORY_CREATE_MSG));
     }
 
     @PutMapping("/category/{id}")
-    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
         CategoryDTO updatedCategoryDTO = iCategoryService.updateCategory(id, categoryDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedCategoryDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), CategoryConstants.CATEGORY_UPDATE_MSG));
     }
 
     @DeleteMapping("/category/{id}")
-    public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO> deleteCategory(@PathVariable Long id) {
         CategoryDTO categoryDTO = iCategoryService.deleteCategoryById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(categoryDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), CategoryConstants.CATEGORY_DELETE_MSG));
     }
 
 }

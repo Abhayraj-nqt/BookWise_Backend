@@ -1,8 +1,10 @@
 package com.bookwise.bookwise.controller;
 
+import com.bookwise.bookwise.constants.BookConstants;
 import com.bookwise.bookwise.dto.book.BookInDTO;
 import com.bookwise.bookwise.dto.book.BookOutDTO;
 import com.bookwise.bookwise.dto.category.CategoryDTO;
+import com.bookwise.bookwise.dto.response.ResponseDTO;
 import com.bookwise.bookwise.service.IBookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,30 +43,6 @@ public class BookController {
         }
     }
 
-    @GetMapping("/books/title-count")
-    public ResponseEntity<Long> getBookTitleCount() {
-        Long count = iBookService.getBookTitleCount();
-        return ResponseEntity.status(HttpStatus.OK).body(count);
-    }
-
-    @GetMapping("/books/total-count")
-    public ResponseEntity<Long> getTotalBooksCount() {
-        Long count = iBookService.getTotalBooksCount();
-        return ResponseEntity.status(HttpStatus.OK).body(count);
-    }
-
-    @GetMapping("/books/author/{author}")
-    public ResponseEntity<List<BookOutDTO>> getBooksByAuthor(@PathVariable String author) {
-        List<BookOutDTO> bookOutDTOList = iBookService.getBooksByAuthor(author);
-        return ResponseEntity.status(HttpStatus.OK).body(bookOutDTOList);
-    }
-
-    @GetMapping("/books/categoryId/{categoryId}")
-    public ResponseEntity<List<BookOutDTO>> getBooksByCategoryId(@PathVariable Long categoryId) {
-        List<BookOutDTO> bookOutDTOList = iBookService.getBooksByCategoryId(categoryId);
-        return ResponseEntity.status(200).body(bookOutDTOList);
-    }
-
     @GetMapping("/book/{id}")
     public ResponseEntity<BookOutDTO> getBookById(@PathVariable Long id) {
         BookOutDTO bookOutDTO = iBookService.getBookById(id);
@@ -78,21 +56,21 @@ public class BookController {
     }
 
     @PostMapping("/book")
-    public ResponseEntity<BookOutDTO> createBook(@RequestBody BookInDTO bookInDTO) {
+    public ResponseEntity<ResponseDTO> createBook(@RequestBody BookInDTO bookInDTO) {
         BookOutDTO bookOutDTO = iBookService.createBook(bookInDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(bookOutDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(HttpStatus.CREATED.toString(), BookConstants.BOOK_CREATE_MSG));
     }
 
     @PutMapping("/book/{id}")
-    public ResponseEntity<BookOutDTO> updateBook(@PathVariable Long id, @RequestBody BookInDTO bookInDTO) {
+    public ResponseEntity<ResponseDTO> updateBook(@PathVariable Long id, @RequestBody BookInDTO bookInDTO) {
         BookOutDTO bookOutDTO = iBookService.updateBook(id, bookInDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookOutDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), BookConstants.BOOK_UPDATE_MSG));
     }
 
     @DeleteMapping("/book/{id}")
-    public ResponseEntity<BookOutDTO> deleteBookById(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO> deleteBookById(@PathVariable Long id) {
         BookOutDTO bookOutDTO = iBookService.deleteBookById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(bookOutDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), BookConstants.BOOK_DELETE_MSG));
     }
 
 }

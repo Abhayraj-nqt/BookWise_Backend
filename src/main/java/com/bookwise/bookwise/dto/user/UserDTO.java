@@ -1,9 +1,12 @@
 package com.bookwise.bookwise.dto.user;
 
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class UserDTO {
 
     private Long id;
@@ -18,7 +21,5 @@ public class UserDTO {
     private String email;
 
     private String role;
-
-    private String token;
 
 }

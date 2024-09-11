@@ -16,6 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByMobileNumberContainingIgnoreCaseAndRole(String mobile, String role, Pageable pageable);
     Page<User> findByRole(String role, Pageable pageable);
     List<User> findByRole(String role, Sort sort);
+    List<User> findByRole(String role);
 
     Optional<User> findByEmail(String email);
 

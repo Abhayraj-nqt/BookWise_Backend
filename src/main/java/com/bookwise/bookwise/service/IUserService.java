@@ -15,18 +15,10 @@ public interface IUserService {
     List<UserDTO> getAllUsers(Sort sort);
     Page<UserDTO> getUsers(Pageable pageable, String search);
 
-    UserDTO getUserByEmail(String email);
     UserDTO getUserByMobile(String mobileNumber);
-    List<UserDTO> getAllUsers();
-    Long getUserCount();
-
-    UserDTO deleteUserByEmail(String email);
-    UserDTO deleteUserByMobile(String mobileNumber);
-
+    UserDTO getUserByEmail(String email);
     UserDTO registerUser(RegisterRequestDTO registerRequestDTO);
-
     UserDTO updateUser(String mobileNumber, RegisterRequestDTO registerRequestDTO);
-
-    UserDTO getUserByToken(String token);
+    UserDTO deleteUserByMobile(String mobileNumber);
 
 }

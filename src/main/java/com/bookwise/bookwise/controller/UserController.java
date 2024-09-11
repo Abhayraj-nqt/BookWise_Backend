@@ -1,6 +1,8 @@
 package com.bookwise.bookwise.controller;
 
+import com.bookwise.bookwise.constants.UserConstants;
 import com.bookwise.bookwise.dto.book.BookOutDTO;
+import com.bookwise.bookwise.dto.response.ResponseDTO;
 import com.bookwise.bookwise.dto.user.RegisterRequestDTO;
 import com.bookwise.bookwise.dto.user.UserDTO;
 import com.bookwise.bookwise.service.IUserService;
@@ -40,34 +42,28 @@ public class UserController {
         }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserDTO> registerUser(@RequestBody RegisterRequestDTO registerRequestDTO) {
-        UserDTO savedUser = iUserService.registerUser(registerRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-    }
-
     @GetMapping("/user/{mobileNumber}")
     public ResponseEntity<UserDTO> getUser(@PathVariable String mobileNumber) {
         UserDTO userDTO = iUserService.getUserByMobile(mobileNumber);
         return ResponseEntity.status(HttpStatus.OK).body(userDTO);
     }
 
-    @GetMapping("/user-count")
-    public ResponseEntity<Long> getUserCount() {
-        Long userCount = iUserService.getUserCount();
-        return ResponseEntity.status(200).body(userCount);
-    }
-
-    @DeleteMapping("/user/{mobileNumber}")
-    public ResponseEntity<UserDTO> deleteUser(@PathVariable String mobileNumber) {
-        UserDTO userDTO = iUserService.deleteUserByMobile(mobileNumber);
-        return ResponseEntity.status(HttpStatus.OK).body(userDTO);
+    @PostMapping("/register")
+    public ResponseEntity<ResponseDTO> registerUser(@RequestBody RegisterRequestDTO registerRequestDTO) {
+        UserDTO savedUser = iUserService.registerUser(registerRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(HttpStatus.CREATED.toString(), UserConstants.USER_CREATE_MSG));
     }
 
     @PutMapping("/user/{mobileNumber}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable String mobileNumber, @RequestBody RegisterRequestDTO registerRequestDTO) {
+    public ResponseEntity<ResponseDTO> updateUser(@PathVariable String mobileNumber, @RequestBody RegisterRequestDTO registerRequestDTO) {
         UserDTO userDTO = iUserService.updateUser(mobileNumber, registerRequestDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(userDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), UserConstants.USER_UPDATE_MSG));
+    }
+
+    @DeleteMapping("/user/{mobileNumber}")
+    public ResponseEntity<ResponseDTO> deleteUser(@PathVariable String mobileNumber) {
+        UserDTO userDTO = iUserService.deleteUserByMobile(mobileNumber);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(HttpStatus.OK.toString(), UserConstants.USER_DELETE_MSG));
     }
 
 }
