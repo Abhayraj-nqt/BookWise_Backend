@@ -142,6 +142,22 @@ public class UserServiceImpl implements IUserService {
                 () -> new UsernameNotFoundException("User not found for mobile no. " + mobileNumber)
         );
 
+        Optional<User> optionalUser = userRepository.findByMobileNumber(registerRequestDTO.getMobileNumber());
+        if (optionalUser.isPresent()) {
+            User otherUser = optionalUser.get();
+            if (otherUser.getId() != user.getId()) {
+                throw new ResourceAlreadyExistsException("User already exists for mobile no. " + registerRequestDTO.getMobileNumber());
+            }
+        }
+
+        optionalUser = userRepository.findByEmail(registerRequestDTO.getEmail());
+        if (optionalUser.isPresent()) {
+            User otherUser = optionalUser.get();
+            if (otherUser.getId() != user.getId()) {
+                throw new ResourceAlreadyExistsException("User already exists for email " + registerRequestDTO.getEmail());
+            }
+        }
+
         user = UserMapper.mapToUser(registerRequestDTO, user);
 
         if (registerRequestDTO.getPassword() != null && registerRequestDTO.getPassword().length() >= 3) {

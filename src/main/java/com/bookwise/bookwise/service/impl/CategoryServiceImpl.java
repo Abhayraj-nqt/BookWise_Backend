@@ -79,6 +79,14 @@ public class CategoryServiceImpl implements ICategoryService {
                 () -> new ResourceNotFoundException("Category", "id", id.toString())
         );
 
+        Optional<Category> otherCategoryOptional = categoryRepository.findByName(categoryDTO.getName());
+        if (otherCategoryOptional.isPresent()) {
+            Category otherCategory = otherCategoryOptional.get();
+            if (otherCategory.getId() != category.getId()) {
+                throw new ResourceAlreadyExistsException("Category already exists with the same name");
+            }
+        }
+
         category = CategoryMapper.mapToCategory(categoryDTO, category);
         Category updatedCategory = categoryRepository.save(category);
 

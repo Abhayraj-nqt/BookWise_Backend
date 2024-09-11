@@ -122,6 +122,16 @@ public class BookServiceImpl implements IBookService {
                 () -> new ResourceNotFoundException("Book", "id", id.toString())
         );
 
+        Optional<Book> optionalBook = bookRepository.findByTitle(bookInDTO.getTitle());
+
+        if (optionalBook.isPresent()) {
+            Book otherBook = optionalBook.get();
+
+            if (otherBook.getId() != book.getId()) {
+                throw new ResourceAlreadyExistsException("Book already exists with the same title");
+            }
+        }
+
         Long prevTotalQty = book.getTotalQty();
         Long prevAvlQty = book.getAvlQty();
 
